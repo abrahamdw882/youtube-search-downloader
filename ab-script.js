@@ -6,17 +6,31 @@ async function fetchVideos() {
   resultsContainer.innerHTML = "";
 
   if (!query) {
-    resultsContainer.innerHTML = "<p>Please enter a search query.</p>";
+    resultsContainer.innerHTML = "<p>Please enter a search query or YouTube URL.</p>";
     return;
   }
 
   try {
-    const response = await fetch(
-      proxyUrl + encodeURIComponent(`https://weeb-api.vercel.app/ytsearch?query=${query}`)
-    );
+    let apiUrl;
+
+    
+    const youtubeUrlPattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
+    if (youtubeUrlPattern.test(query)) {
+      apiUrl = `https://weeb-api.vercel.app/ytsearch?query=${encodeURIComponent(query)}`;
+    } else {
+      apiUrl = `https://weeb-api.vercel.app/ytsearch?query=${encodeURIComponent(query)}`;
+    }
+
+    const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
+
+    if (response.status === 404) {
+      resultsContainer.innerHTML = "<p>API endpoint not found. Please check the URL.</p>";
+      return;
+    }
+
     const data = await response.json();
 
-    if (data.length === 0) {
+    if (!data || (Array.isArray(data) && data.length === 0)) {
       resultsContainer.innerHTML = "<p>No results found.</p>";
       return;
     }
@@ -64,7 +78,6 @@ async function fetchDownloadLinks(button, videoUrl) {
     if (data.success && data.result) {
       const result = data.result;
 
-      
       const videoDownloadButton = document.createElement("a");
       videoDownloadButton.classList.add("download-button");
       videoDownloadButton.href = result.video_url;
@@ -72,7 +85,6 @@ async function fetchDownloadLinks(button, videoUrl) {
       videoDownloadButton.innerText = `Download Video (${result.video_quality})`;
       downloadSection.appendChild(videoDownloadButton);
 
-      
       const audioDownloadButton = document.createElement("a");
       audioDownloadButton.classList.add("download-button");
       audioDownloadButton.href = result.audio_url;

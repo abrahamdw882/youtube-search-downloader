@@ -1,4 +1,4 @@
-const proxyUrl = "https://ab-proxy1.abrahamdw882.workers.dev//?u=";
+const proxyUrl = "https://ab-proxy1.abrahamdw882.workers.dev/?u=";
 
 async function fetchVideos() {
   const query = document.getElementById("searchQuery").value;

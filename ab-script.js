@@ -1,4 +1,4 @@
-const proxyUrl = "https://broken-star-6439.abrahamdw882.workers.dev/?u=";
+const proxyUrl = "https://ab-proxy1.abrahamdw882.workers.dev//?u=";
 
 async function fetchVideos() {
   const query = document.getElementById("searchQuery").value;

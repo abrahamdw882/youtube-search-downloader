@@ -1,5 +1,23 @@
 const proxyUrl = "https://ab-proxy1.abrahamdw882.workers.dev/?u=";
 
+async function fetchWithRetry(url, options = {}, retries = 3, backoff = 300) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response;
+    } catch (error) {
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, backoff * (i + 1)));
+      } else {
+        throw error;
+      }
+    }
+  }
+}
+
 async function fetchVideos() {
   const query = document.getElementById("searchQuery").value;
   const resultsContainer = document.getElementById("results");
@@ -13,7 +31,6 @@ async function fetchVideos() {
   try {
     let apiUrl;
 
-    
     const youtubeUrlPattern = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
     const match = query.match(youtubeUrlPattern);
     if (match && match[1]) {
@@ -23,7 +40,7 @@ async function fetchVideos() {
       apiUrl = `https://weeb-api.vercel.app/ytsearch?query=${encodeURIComponent(query)}`;
     }
 
-    const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
+    const response = await fetchWithRetry(proxyUrl + encodeURIComponent(apiUrl));
 
     if (response.status === 404) {
       resultsContainer.innerHTML = "<p>API endpoint not found. Please check the URL.</p>";
@@ -71,7 +88,7 @@ async function fetchDownloadLinks(button, videoUrl) {
   downloadSection.style.display = "block";
 
   try {
-    const response = await fetch(
+    const response = await fetchWithRetry(
       proxyUrl +
         encodeURIComponent(`https://api.giftedtech.my.id/api/download/ytdl?apikey=gifted&url=${videoUrl}`)
     );

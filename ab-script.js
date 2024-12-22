@@ -73,7 +73,7 @@ async function fetchDownloadLinks(button, videoUrl) {
   try {
     const response = await fetch(
       proxyUrl +
-        encodeURIComponent(`https://api.giftedtech.my.id/api/download/ytdl2?apikey=gifted&url=${videoUrl}`)
+        encodeURIComponent(`https://api.giftedtech.my.id/api/download/ytdl?apikey=gifted&url=${videoUrl}`)
     );
     const data = await response.json();
 

@@ -77,6 +77,9 @@ loadingDiv.classList.remove("hidden");
     resultsContainer.innerHTML = `<p>Failed to fetch results. Please try again later.</p>`;
     console.error(error);
   }
+  finally {
+    loadingDiv.classList.add("hidden");
+  }
 }
 
 async function fetchDownloadLinks(button, videoUrl) {

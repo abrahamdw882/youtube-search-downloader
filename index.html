@@ -71,6 +71,20 @@
     .search-box button:hover {
       background-color: #0c1b0c;
     }
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #4a8feb;
+      border-radius: 50%;
+      width: 25px;
+      height: 25px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
 
     .results {
       list-style: none;

@@ -28,7 +28,9 @@ async function fetchVideos() {
     resultsContainer.innerHTML = "<p>Please enter a search query or YouTube URL.</p>";
     return;
   }
-loadingDiv.classList.remove("hidden");
+
+  loadingDiv.classList.remove("hidden");
+
   try {
     let apiUrl;
 
@@ -76,8 +78,7 @@ loadingDiv.classList.remove("hidden");
   } catch (error) {
     resultsContainer.innerHTML = `<p>Failed to fetch results. Please try again later.</p>`;
     console.error(error);
-  }
-  finally {
+  } finally {
     loadingDiv.classList.add("hidden");
   }
 }

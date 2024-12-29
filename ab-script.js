@@ -21,13 +21,14 @@ async function fetchWithRetry(url, options = {}, retries = 3, backoff = 300) {
 async function fetchVideos() {
   const query = document.getElementById("searchQuery").value;
   const resultsContainer = document.getElementById("results");
+  const loadingDiv = document.getElementById("loading");
   resultsContainer.innerHTML = "";
 
   if (!query) {
     resultsContainer.innerHTML = "<p>Please enter a search query or YouTube URL.</p>";
     return;
   }
-
+loadingDiv.classList.remove("hidden");
   try {
     let apiUrl;
 

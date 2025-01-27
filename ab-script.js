@@ -93,29 +93,41 @@ async function fetchDownloadLinks(button, videoUrl) {
   downloadSection.style.display = "block";
 
   try {
-    const response = await fetchWithRetry(
+    const mp3Response = await fetchWithRetry(
       proxyUrl +
-        encodeURIComponent(`https://api.giftedtech.my.id/api/download/ytdl?apikey=gifted&url=${videoUrl}`)
+        encodeURIComponent(`https://api.davidcyriltech.my.id/download/ytmp3?url=${videoUrl}`)
     );
-    const data = await response.json();
+    const mp4Response = await fetchWithRetry(
+      proxyUrl +
+        encodeURIComponent(`https://api.davidcyriltech.my.id/download/ytmp4?url=${videoUrl}`)
+    );
 
-    if (data.success && data.result) {
-      const result = data.result;
+    const mp3Data = await mp3Response.json();
+    const mp4Data = await mp4Response.json();
 
-      const videoDownloadButton = document.createElement("a");
-      videoDownloadButton.classList.add("download-button");
-      videoDownloadButton.href = result.video_url;
-      videoDownloadButton.target = "_blank"; 
-      videoDownloadButton.innerText = `Download Video (${result.video_quality})`;
-      downloadSection.appendChild(videoDownloadButton);
+    if (mp3Data.success && mp3Data.result) {
+      const mp3Result = mp3Data.result;
 
       const audioDownloadButton = document.createElement("a");
       audioDownloadButton.classList.add("download-button");
-      audioDownloadButton.href = result.audio_url;
+      audioDownloadButton.href = mp3Result.download_url;
       audioDownloadButton.target = "_blank"; 
-      audioDownloadButton.innerText = `Download Audio (${result.audio_quality})`;
+      audioDownloadButton.innerText = `Download Audio (128kbps)`;
       downloadSection.appendChild(audioDownloadButton);
-    } else {
+    }
+
+    if (mp4Data.success && mp4Data.result) {
+      const mp4Result = mp4Data.result;
+
+      const videoDownloadButton = document.createElement("a");
+      videoDownloadButton.classList.add("download-button");
+      videoDownloadButton.href = mp4Result.download_url;
+      videoDownloadButton.target = "_blank"; 
+      videoDownloadButton.innerText = `Download Video (${mp4Result.quality})`;
+      downloadSection.appendChild(videoDownloadButton);
+    }
+
+    if (!mp3Data.success && !mp4Data.success) {
       downloadSection.innerHTML = "<p>No download links available.</p>";
     }
   } catch (error) {

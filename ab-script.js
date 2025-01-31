@@ -1,24 +1,34 @@
 const proxyUrl = "https://ab-proxy1.abrahamdw882.workers.dev/?u=";
 
-async function fetchWithRetry(url, options = {}, retries = 2, backoff = 200) {
-    for (let i = 0; i < retries; i++) {
+async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
+    let attempt = 0;
+    while (attempt < retries || retries === -1) { 
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); 
+            const timeoutId = setTimeout(() => controller.abort(), 8000); 
 
+            console.log(`Attempt ${attempt + 1} - Fetching: ${url}`);
             const response = await fetch(url, { ...options, signal: controller.signal });
             clearTimeout(timeoutId);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
+
+            console.log(`Success after ${attempt + 1} attempts.`);
             return response;
         } catch (error) {
-            if (i < retries - 1) {
-                await new Promise((resolve) => setTimeout(resolve, backoff * (i + 1)));
-            } else {
+            console.error(`Attempt ${attempt + 1} failed: ${error.message}`);
+            attempt++;
+
+            if (retries !== -1 && attempt >= retries) {
+                console.error("Max retries reached. Request failed.");
                 throw error;
             }
+
+            const delay = backoff * attempt;
+            console.log(`Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
 }
@@ -38,12 +48,7 @@ async function fetchVideos() {
 
     try {
         const apiUrl = `https://weeb-api.vercel.app/ytsearch?query=${encodeURIComponent(query)}`;
-        const response = await fetchWithRetry(proxyUrl + encodeURIComponent(apiUrl));
-
-        if (response.status === 404) {
-            resultsContainer.innerHTML = "<p>API endpoint not found. Please check the URL.</p>";
-            return;
-        }
+        const response = await fetchWithRetry(proxyUrl + encodeURIComponent(apiUrl), {}, -1); 
 
         const data = await response.json();
 
@@ -92,14 +97,27 @@ async function fetchDownloadLinks(button, videoUrl) {
         const mp4ApiUrl = `https://api.davidcyriltech.my.id/download/ytmp4?url=${videoUrl}`;
 
         const [mp3Response, mp4Response] = await Promise.all([
-            fetchWithRetry(proxyUrl + encodeURIComponent(mp3ApiUrl)),
-            fetchWithRetry(proxyUrl + encodeURIComponent(mp4ApiUrl))
+            fetchWithRetry(proxyUrl + encodeURIComponent(mp3ApiUrl), {}, -1),
+            fetchWithRetry(proxyUrl + encodeURIComponent(mp4ApiUrl), {}, -1) 
         ]);
 
-        const mp3Data = await mp3Response.json();
-        const mp4Data = await mp4Response.json();
+        let mp3Data, mp4Data;
 
-        if (mp3Data.success && mp3Data.data.downloadUrl) {
+        try {
+            mp3Data = await mp3Response.json();
+        } catch (e) {
+            console.error("MP3 JSON Parsing Error:", e);
+            mp3Data = {};
+        }
+
+        try {
+            mp4Data = await mp4Response.json();
+        } catch (e) {
+            console.error("MP4 JSON Parsing Error:", e);
+            mp4Data = {};
+        }
+
+        if (mp3Data.success && mp3Data.data?.downloadUrl) {
             const audioDownloadButton = document.createElement("a");
             audioDownloadButton.classList.add("download-button");
             audioDownloadButton.href = mp3Data.data.downloadUrl;
@@ -108,7 +126,7 @@ async function fetchDownloadLinks(button, videoUrl) {
             downloadSection.appendChild(audioDownloadButton);
         }
 
-        if (mp4Data.success && mp4Data.result) {
+        if (mp4Data.success && mp4Data.result?.download_url) {
             const videoDownloadButton = document.createElement("a");
             videoDownloadButton.classList.add("download-button");
             videoDownloadButton.href = mp4Data.result.download_url;

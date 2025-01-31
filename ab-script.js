@@ -85,8 +85,13 @@ async function fetchVideos() {
 
 async function fetchDownloadLinks(button, videoUrl) {
     const originalText = button.innerText;
-    button.innerText = "Loading...";
     button.disabled = true;
+
+    let dots = "";
+    const loadingInterval = setInterval(() => {
+        dots = dots.length < 4 ? dots + "." : "";
+        button.innerText = `📀Loading${dots}`;
+    }, 500); 
 
     const downloadSection = document.getElementById(`download-${videoUrl}`);
     downloadSection.innerHTML = "";
@@ -98,7 +103,7 @@ async function fetchDownloadLinks(button, videoUrl) {
 
         const [mp3Response, mp4Response] = await Promise.all([
             fetchWithRetry(proxyUrl + encodeURIComponent(mp3ApiUrl), {}, -1),
-            fetchWithRetry(proxyUrl + encodeURIComponent(mp4ApiUrl), {}, -1) 
+            fetchWithRetry(proxyUrl + encodeURIComponent(mp4ApiUrl), {}, -1)
         ]);
 
         let mp3Data, mp4Data;
@@ -141,8 +146,9 @@ async function fetchDownloadLinks(button, videoUrl) {
     } catch (error) {
         downloadSection.innerHTML = `<p>Failed to fetch download links. Please try again later.</p>`;
         console.error(error);
+    } finally {
+        clearInterval(loadingInterval);
+        button.innerText = originalText; 
+        button.disabled = false;
     }
-
-    button.innerText = originalText;
-    button.disabled = false;
 }

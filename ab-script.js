@@ -102,8 +102,8 @@ async function fetchDownloadLinks(button, videoUrl) {
         const mp4ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp4?url=${encodeURIComponent(videoUrl)}&reso=360p`;
 
         const [mp3Response, mp4Response] = await Promise.all([
-            fetchWithRetry(proxyUrl + encodeURIComponent(mp3ApiUrl), {}, -1),
-            fetchWithRetry(proxyUrl + encodeURIComponent(mp4ApiUrl), {}, -1)
+            fetchWithRetry(mp3ApiUrl, {}, -1),
+            fetchWithRetry(mp4ApiUrl, {}, -1)
         ]);
 
         let mp3Data, mp4Data;
@@ -122,21 +122,23 @@ async function fetchDownloadLinks(button, videoUrl) {
             mp4Data = {};
         }
 
-        if (mp3Data.status && mp3Data.download?.downloadUrl) {
-            const audioDownloadButton = document.createElement("a");
+        if (mp3Data.status) {
+            const audioDownloadButton = document.createElement("button");
             audioDownloadButton.classList.add("download-button");
-            audioDownloadButton.href = mp3Data.download.downloadUrl;
-            audioDownloadButton.target = "_blank";
             audioDownloadButton.innerText = `Download Audio (MP3)`;
+            audioDownloadButton.onclick = () => {
+                window.location.href = `https://www.y2mate.com/mates/en68/analyze/ajax?url=${encodeURIComponent(videoUrl)}&q_auto=1&ajax=1`;
+            };
             downloadSection.appendChild(audioDownloadButton);
         }
 
-        if (mp4Data.status && mp4Data.download?.downloadUrl) {
-            const videoDownloadButton = document.createElement("a");
+        if (mp4Data.status) {
+            const videoDownloadButton = document.createElement("button");
             videoDownloadButton.classList.add("download-button");
-            videoDownloadButton.href = mp4Data.download.downloadUrl;
-            videoDownloadButton.target = "_blank";
-            videoDownloadButton.innerText = `Download Video (360p)`;
+            videoDownloadButton.innerText = `Download Video (MP4 360p)`;
+            videoDownloadButton.onclick = () => {
+                window.location.href = `https://www.y2mate.com/mates/en68/analyze/ajax?url=${encodeURIComponent(videoUrl)}&q_auto=1&ajax=1`;
+            };
             downloadSection.appendChild(videoDownloadButton);
         }
 

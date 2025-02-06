@@ -145,7 +145,7 @@ async function fetchDownloadLinks(button, videoUrl) {
             if (giftedMp4Data.success && giftedMp4Data.result?.download_url) {
                 const videoDownloadButton = document.createElement("a");
                 videoDownloadButton.classList.add("download-button");
-                videoDownloadButton.href = giftedMp4Data.result.download_url; /
+                videoDownloadButton.href = giftedMp4Data.result.download_url; 
                 videoDownloadButton.target = "_blank";
                 videoDownloadButton.innerText = `Download Video`;
                 downloadSection.appendChild(videoDownloadButton);

@@ -121,27 +121,35 @@ async function fetchDownloadLinks(button, videoUrl) {
             console.error("MP4 JSON Parsing Error:", e);
             mp4Data = {};
         }
-
         if (mp3Data.status && mp3Data.download?.downloadUrl) {
-            const oldMp3Url = `https://api.giftedtech.my.id/api/download/dlmp3?apikey=_0x5aff35,_0x1876stqr&url=${encodeURIComponent(videoUrl)}`;
-            
-            const audioDownloadButton = document.createElement("a");
-            audioDownloadButton.classList.add("download-button");
-            audioDownloadButton.href = oldMp3Url; 
-            audioDownloadButton.target = "_blank";
-            audioDownloadButton.innerText = `Download Audio (Redirect)`;
-            downloadSection.appendChild(audioDownloadButton);
-        }
+            const giftedMp3Url = `https://api.giftedtech.my.id/api/download/dlmp3?apikey=_0x5aff35,_0x1876stqr&url=${encodeURIComponent(videoUrl)}`;
 
+            const giftedMp3Response = await fetch(giftedMp3Url);
+            const giftedMp3Data = await giftedMp3Response.json();
+
+            if (giftedMp3Data.success && giftedMp3Data.result?.download_url) {
+                const audioDownloadButton = document.createElement("a");
+                audioDownloadButton.classList.add("download-button");
+                audioDownloadButton.href = giftedMp3Data.result.download_url; 
+                audioDownloadButton.target = "_blank";
+                audioDownloadButton.innerText = `Download Audio`;
+                downloadSection.appendChild(audioDownloadButton);
+            }
+        }
         if (mp4Data.status && mp4Data.download?.downloadUrl) {
-            const oldMp4Url = `https://api.giftedtech.my.id/api/download/dlmp4?apikey=_0x5aff35,_0x1876stqr&url=${encodeURIComponent(videoUrl)}`;
-            
-            const videoDownloadButton = document.createElement("a");
-            videoDownloadButton.classList.add("download-button");
-            videoDownloadButton.href = oldMp4Url; 
-            videoDownloadButton.target = "_blank";
-            videoDownloadButton.innerText = `Download Video (Redirect)`;
-            downloadSection.appendChild(videoDownloadButton);
+            const giftedMp4Url = `https://api.giftedtech.my.id/api/download/dlmp4?apikey=_0x5aff35,_0x1876stqr&url=${encodeURIComponent(videoUrl)}`;
+
+            const giftedMp4Response = await fetch(giftedMp4Url);
+            const giftedMp4Data = await giftedMp4Response.json();
+
+            if (giftedMp4Data.success && giftedMp4Data.result?.download_url) {
+                const videoDownloadButton = document.createElement("a");
+                videoDownloadButton.classList.add("download-button");
+                videoDownloadButton.href = giftedMp4Data.result.download_url; /
+                videoDownloadButton.target = "_blank";
+                videoDownloadButton.innerText = `Download Video`;
+                downloadSection.appendChild(videoDownloadButton);
+            }
         }
 
         if (!mp3Data.status && !mp4Data.status) {

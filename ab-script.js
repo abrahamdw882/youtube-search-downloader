@@ -124,7 +124,7 @@ async function fetchDownloadLinks(button, videoUrl) {
         if (mp3Data.status && mp3Data.download?.downloadUrl) {
             const giftedMp3Url = `https://api.giftedtech.my.id/api/download/dlmp3?apikey=_0x5aff35,_0x1876stqr&url=${encodeURIComponent(videoUrl)}`;
 
-            const giftedMp3Response = await fetch(giftedMp3Url);
+            const giftedMp3Response = await fetch(proxyUrl + encodeURIComponent(giftedMp3Url)); 
             const giftedMp3Data = await giftedMp3Response.json();
 
             if (giftedMp3Data.success && giftedMp3Data.result?.download_url) {
@@ -136,10 +136,12 @@ async function fetchDownloadLinks(button, videoUrl) {
                 downloadSection.appendChild(audioDownloadButton);
             }
         }
+
+
         if (mp4Data.status && mp4Data.download?.downloadUrl) {
             const giftedMp4Url = `https://api.giftedtech.my.id/api/download/dlmp4?apikey=_0x5aff35,_0x1876stqr&url=${encodeURIComponent(videoUrl)}`;
 
-            const giftedMp4Response = await fetch(giftedMp4Url);
+            const giftedMp4Response = await fetch(proxyUrl + encodeURIComponent(giftedMp4Url)); 
             const giftedMp4Data = await giftedMp4Response.json();
 
             if (giftedMp4Data.success && giftedMp4Data.result?.download_url) {

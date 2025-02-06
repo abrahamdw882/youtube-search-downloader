@@ -91,15 +91,15 @@ async function fetchDownloadLinks(button, videoUrl) {
     const loadingInterval = setInterval(() => {
         dots = dots.length < 4 ? dots + "." : "";
         button.innerText = `📀Loading${dots}`;
-    }, 500); 
+    }, 500);
 
     const downloadSection = document.getElementById(`download-${videoUrl}`);
     downloadSection.innerHTML = "";
     downloadSection.style.display = "block";
 
     try {
-        const mp3ApiUrl = `https://nikka-api.us.kg/dl/ytdl?url=${videoUrl}&format=mp3&apiKey=nikka`;
-        const mp4ApiUrl = `https://api.davidcyriltech.my.id/download/ytmp4?url=${videoUrl}`;
+        const mp3ApiUrl = `https://api.giftedtech.my.id/api/download/dlmp3?apikey=_0x5aff35,_0x1876stqr&url=${encodeURIComponent(videoUrl)}`;
+        const mp4ApiUrl = `https://api.giftedtech.my.id/api/download/dlmp4?apikey=_0x5aff35,_0x1876stqr&url=${encodeURIComponent(videoUrl)}`;
 
         const [mp3Response, mp4Response] = await Promise.all([
             fetchWithRetry(proxyUrl + encodeURIComponent(mp3ApiUrl), {}, -1),
@@ -122,12 +122,12 @@ async function fetchDownloadLinks(button, videoUrl) {
             mp4Data = {};
         }
 
-        if (mp3Data.success && mp3Data.data?.downloadUrl) {
+        if (mp3Data.success && mp3Data.result?.download_url) {
             const audioDownloadButton = document.createElement("a");
             audioDownloadButton.classList.add("download-button");
-            audioDownloadButton.href = mp3Data.data.downloadUrl;
+            audioDownloadButton.href = mp3Data.result.download_url;
             audioDownloadButton.target = "_blank";
-            audioDownloadButton.innerText = `Download Audio (MP3)`;
+            audioDownloadButton.innerText = `Download Audio (${mp3Data.result.quality})`;
             downloadSection.appendChild(audioDownloadButton);
         }
 
@@ -148,7 +148,7 @@ async function fetchDownloadLinks(button, videoUrl) {
         console.error(error);
     } finally {
         clearInterval(loadingInterval);
-        button.innerText = originalText; 
+        button.innerText = originalText;
         button.disabled = false;
     }
 }

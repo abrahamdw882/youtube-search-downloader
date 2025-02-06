@@ -1,4 +1,4 @@
-const proxyUrl = "https://ab-proxy1.abrahamdw882.workers.dev/?u=";
+const proxyUrl = "https://ab-ytdl-processing.abrahamdw882.workers.dev/?u=";
 
 async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
     let attempt = 0;

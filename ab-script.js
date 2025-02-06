@@ -101,12 +101,9 @@ async function fetchDownloadLinks(button, videoUrl) {
         const mp3ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp3?url=${encodeURIComponent(videoUrl)}`;
         const mp4ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp4?url=${encodeURIComponent(videoUrl)}&reso=360p`;
 
-        const proxiedMp3ApiUrl = proxyUrl + encodeURIComponent(mp3ApiUrl);
-        const proxiedMp4ApiUrl = proxyUrl + encodeURIComponent(mp4ApiUrl);
-
         const [mp3Response, mp4Response] = await Promise.all([
-            fetchWithRetry(proxiedMp3ApiUrl, {}, -1),
-            fetchWithRetry(proxiedMp4ApiUrl, {}, -1)
+            fetchWithRetry(mp3ApiUrl, {}, -1),
+            fetchWithRetry(mp4ApiUrl, {}, -1)
         ]);
 
         let mp3Data, mp4Data;
@@ -124,11 +121,10 @@ async function fetchDownloadLinks(button, videoUrl) {
             console.error("MP4 JSON Parsing Error:", e);
             mp4Data = {};
         }
-
         if (mp3Data.status && mp3Data.download?.downloadUrl) {
             const audioDownloadButton = document.createElement("a");
             audioDownloadButton.classList.add("download-button");
-            audioDownloadButton.href = mp3Data.download.downloadUrl;
+            audioDownloadButton.href = proxyUrl + encodeURIComponent(mp3Data.download.downloadUrl);
             audioDownloadButton.target = "_blank";
             audioDownloadButton.innerText = `Download Audio (MP3)`;
             downloadSection.appendChild(audioDownloadButton);
@@ -137,7 +133,7 @@ async function fetchDownloadLinks(button, videoUrl) {
         if (mp4Data.status && mp4Data.download?.downloadUrl) {
             const videoDownloadButton = document.createElement("a");
             videoDownloadButton.classList.add("download-button");
-            videoDownloadButton.href = mp4Data.download.downloadUrl;
+            videoDownloadButton.href = proxyUrl + encodeURIComponent(mp4Data.download.downloadUrl);
             videoDownloadButton.target = "_blank";
             videoDownloadButton.innerText = `Download Video (MP4 360p)`;
             downloadSection.appendChild(videoDownloadButton);

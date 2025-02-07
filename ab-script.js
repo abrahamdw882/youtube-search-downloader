@@ -1,18 +1,5 @@
 const proxyUrl = "https://ab-ytdl-processing.abrahamdw882.workers.dev/?u=";
 
-function convertYouTubeURL(url) {
-    try {
-        const parsedUrl = new URL(url);
-        if (parsedUrl.hostname === "youtu.be") {
-            const videoId = parsedUrl.pathname.substring(1);
-            return `https://www.youtube.com/watch?v=${videoId}`;
-        }
-    } catch (error) {
-        console.error("Invalid URL format:", error);
-    }
-    return url; 
-}
-
 async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
     let attempt = 0;
     while (attempt < retries || retries === -1) { 
@@ -20,18 +7,18 @@ async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 8000); 
 
-            console.log(`Attempt ${attempt + 1} - Fetching: ${url}`);
+            console.log(Attempt ${attempt + 1} - Fetching: ${url});
             const response = await fetch(url, { ...options, signal: controller.signal });
             clearTimeout(timeoutId);
 
             if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+                throw new Error(HTTP error! Status: ${response.status});
             }
 
-            console.log(`Success after ${attempt + 1} attempts.`);
+            console.log(Success after ${attempt + 1} attempts.);
             return response;
         } catch (error) {
-            console.error(`Attempt ${attempt + 1} failed: ${error.message}`);
+            console.error(Attempt ${attempt + 1} failed: ${error.message});
             attempt++;
 
             if (retries !== -1 && attempt >= retries) {
@@ -40,7 +27,7 @@ async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
             }
 
             const delay = backoff * attempt;
-            console.log(`Retrying in ${delay}ms...`);
+            console.log(Retrying in ${delay}ms...);
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
@@ -60,37 +47,36 @@ async function fetchVideos() {
     loadingDiv.classList.remove("hidden");
 
     try {
-        let searchQuery = query.startsWith("http") ? convertYouTubeURL(query) : query;
-        const apiUrl = `https://delirius-apiofc.vercel.app/search/ytsearch?q=${encodeURIComponent(searchQuery)}`;
+        const apiUrl = `https://weeb-api.vercel.app/ytsearch?query=${encodeURIComponent(query)}`;
         const response = await fetchWithRetry(proxyUrl + encodeURIComponent(apiUrl), {}, -1); 
 
         const data = await response.json();
 
-        if (!data || !data.status || !data.data || data.data.length === 0) {
+        if (!data || (Array.isArray(data) && data.length === 0)) {
             resultsContainer.innerHTML = "<p>No results found.</p>";
             return;
         }
 
-        data.data.forEach((video) => {
+        data.forEach((video) => {
             const videoCard = document.createElement("li");
             videoCard.classList.add("video-card");
 
-            videoCard.innerHTML = `
+            videoCard.innerHTML = 
                 <img src="${video.thumbnail}" alt="${video.title}">
                 <div class="video-info">
                     <h3><a href="${video.url}" target="_blank">${video.title}</a></h3>
                     <p>Author: <a href="${video.author.url}" target="_blank">${video.author.name}</a></p>
                     <p>Views: ${video.views.toLocaleString()}</p>
-                    <p>Duration: ${video.duration}</p>
+                    <p>Duration: ${video.duration.timestamp}</p>
                     <button class="download-button" onclick="fetchDownloadLinks(this, '${video.url}')">Download</button>
-                    <div class="download-section" id="download-${video.videoId}" style="display: none;"></div>
+                    <div class="download-section" id="download-${video.url}" style="display: none;"></div>
                 </div>
-            `;
+            ;
 
             resultsContainer.appendChild(videoCard);
         });
     } catch (error) {
-        resultsContainer.innerHTML = `<p>Failed to fetch results. Please try again later.</p>`;
+        resultsContainer.innerHTML = <p>Failed to fetch results. Please try again later.</p>;
         console.error(error);
     } finally {
         loadingDiv.classList.add("hidden");
@@ -104,16 +90,16 @@ async function fetchDownloadLinks(button, videoUrl) {
     let dots = "";
     const loadingInterval = setInterval(() => {
         dots = dots.length < 4 ? dots + "." : "";
-        button.innerText = `📀Loading${dots}`;
+        button.innerText = 📀Loading${dots};
     }, 500);
 
-    const downloadSection = document.getElementById(`download-${videoUrl}`);
+    const downloadSection = document.getElementById(download-${videoUrl});
     downloadSection.innerHTML = "";
     downloadSection.style.display = "block";
 
     try {
         const mp3ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp3?url=${encodeURIComponent(videoUrl)}`;
-        const mp4ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp4?url=${encodeURIComponent(videoUrl)}&reso=360p`;
+        const mp4ApiUrl =`https://ditzdevs-ytdl-api.hf.space/api/ytmp4?url=${encodeURIComponent(videoUrl)}&reso=360p`;
 
         const [mp3Response, mp4Response] = await Promise.all([
             fetchWithRetry(mp3ApiUrl, {}, -1),
@@ -135,13 +121,12 @@ async function fetchDownloadLinks(button, videoUrl) {
             console.error("MP4 JSON Parsing Error:", e);
             mp4Data = {};
         }
-
         if (mp3Data.status && mp3Data.download?.downloadUrl) {
             const audioDownloadButton = document.createElement("a");
             audioDownloadButton.classList.add("download-button");
             audioDownloadButton.href = proxyUrl + encodeURIComponent(mp3Data.download.downloadUrl);
             audioDownloadButton.target = "_blank";
-            audioDownloadButton.innerText = `Download Audio (MP3)`;
+            audioDownloadButton.innerText = Download Audio (MP3);
             downloadSection.appendChild(audioDownloadButton);
         }
 
@@ -150,7 +135,7 @@ async function fetchDownloadLinks(button, videoUrl) {
             videoDownloadButton.classList.add("download-button");
             videoDownloadButton.href = proxyUrl + encodeURIComponent(mp4Data.download.downloadUrl);
             videoDownloadButton.target = "_blank";
-            videoDownloadButton.innerText = `Download Video (MP4 360p)`;
+            videoDownloadButton.innerText = Download Video (MP4 360p);
             downloadSection.appendChild(videoDownloadButton);
         }
 
@@ -158,11 +143,11 @@ async function fetchDownloadLinks(button, videoUrl) {
             downloadSection.innerHTML = "<p>No download links available.</p>";
         }
     } catch (error) {
-        downloadSection.innerHTML = `<p>Failed to fetch download links. Please try again later.</p>`;
+        downloadSection.innerHTML = <p>Failed to fetch download links. Please try again later.</p>;
         console.error(error);
     } finally {
         clearInterval(loadingInterval);
         button.innerText = originalText;
         button.disabled = false;
     }
-}
+} 

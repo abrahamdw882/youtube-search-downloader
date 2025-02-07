@@ -1,5 +1,19 @@
 const proxyUrl = "https://ab-ytdl-processing.abrahamdw882.workers.dev/?u=";
 
+function convertYouTubeURL(url) {
+    try {
+        const parsedUrl = new URL(url);
+        if (parsedUrl.hostname === "youtu.be") {
+            const videoId = parsedUrl.pathname.substring(1); 
+            return `https://www.youtube.com/watch?v=${videoId}`;
+        }
+        return url; 
+    } catch (error) {
+        console.error("Invalid URL format:", error);
+        return url;
+    }
+}
+
 async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
     let attempt = 0;
     while (attempt < retries || retries === -1) { 
@@ -34,7 +48,7 @@ async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
 }
 
 async function fetchVideos() {
-    const query = document.getElementById("searchQuery").value;
+    let query = document.getElementById("searchQuery").value;
     const resultsContainer = document.getElementById("results");
     const loadingDiv = document.getElementById("loading");
     resultsContainer.innerHTML = "";
@@ -44,20 +58,22 @@ async function fetchVideos() {
         return;
     }
 
+    query = convertYouTubeURL(query);
+
     loadingDiv.classList.remove("hidden");
 
     try {
-        const apiUrl = `https://weeb-api.vercel.app/ytsearch?query=${encodeURIComponent(query)}`;
-        const response = await fetchWithRetry(proxyUrl + encodeURIComponent(apiUrl), {}, -1); 
+        const apiUrl = `https://delirius-apiofc.vercel.app/search/ytsearch?q=${encodeURIComponent(query)}`;
+        const response = await fetchWithRetry(apiUrl, {}, -1); 
 
         const data = await response.json();
 
-        if (!data || (Array.isArray(data) && data.length === 0)) {
+        if (!data || !data.status || !data.data || data.data.length === 0) {
             resultsContainer.innerHTML = "<p>No results found.</p>";
             return;
         }
 
-        data.forEach((video) => {
+        data.data.forEach((video) => {
             const videoCard = document.createElement("li");
             videoCard.classList.add("video-card");
 
@@ -67,9 +83,9 @@ async function fetchVideos() {
                     <h3><a href="${video.url}" target="_blank">${video.title}</a></h3>
                     <p>Author: <a href="${video.author.url}" target="_blank">${video.author.name}</a></p>
                     <p>Views: ${video.views.toLocaleString()}</p>
-                    <p>Duration: ${video.duration.timestamp}</p>
+                    <p>Duration: ${video.duration}</p>
                     <button class="download-button" onclick="fetchDownloadLinks(this, '${video.url}')">Download</button>
-                    <div class="download-section" id="download-${video.url}" style="display: none;"></div>
+                    <div class="download-section" id="download-${video.videoId}" style="display: none;"></div>
                 </div>
             `;
 
@@ -121,6 +137,7 @@ async function fetchDownloadLinks(button, videoUrl) {
             console.error("MP4 JSON Parsing Error:", e);
             mp4Data = {};
         }
+
         if (mp3Data.status && mp3Data.download?.downloadUrl) {
             const audioDownloadButton = document.createElement("a");
             audioDownloadButton.classList.add("download-button");

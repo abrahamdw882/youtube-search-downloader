@@ -4,14 +4,13 @@ function convertYouTubeURL(url) {
     try {
         const parsedUrl = new URL(url);
         if (parsedUrl.hostname === "youtu.be") {
-            const videoId = parsedUrl.pathname.substring(1); 
+            const videoId = parsedUrl.pathname.substring(1);
             return `https://www.youtube.com/watch?v=${videoId}`;
         }
-        return url; 
     } catch (error) {
         console.error("Invalid URL format:", error);
-        return url;
     }
+    return url; 
 }
 
 async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
@@ -48,7 +47,7 @@ async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
 }
 
 async function fetchVideos() {
-    let query = document.getElementById("searchQuery").value;
+    const query = document.getElementById("searchQuery").value;
     const resultsContainer = document.getElementById("results");
     const loadingDiv = document.getElementById("loading");
     resultsContainer.innerHTML = "";
@@ -58,13 +57,12 @@ async function fetchVideos() {
         return;
     }
 
-    query = convertYouTubeURL(query);
-
     loadingDiv.classList.remove("hidden");
 
     try {
-        const apiUrl = `https://delirius-apiofc.vercel.app/search/ytsearch?q=${encodeURIComponent(query)}`;
-        const response = await fetchWithRetry(apiUrl, {}, -1); 
+        let searchQuery = query.startsWith("http") ? convertYouTubeURL(query) : query;
+        const apiUrl = `https://delirius-apiofc.vercel.app/search/ytsearch?q=${encodeURIComponent(searchQuery)}`;
+        const response = await fetchWithRetry(proxyUrl + encodeURIComponent(apiUrl), {}, -1); 
 
         const data = await response.json();
 
@@ -99,7 +97,7 @@ async function fetchVideos() {
     }
 }
 
-async function fetchDownloadLinks(button, videoId) { 
+async function fetchDownloadLinks(button, videoUrl) {
     const originalText = button.innerText;
     button.disabled = true;
 
@@ -109,20 +107,11 @@ async function fetchDownloadLinks(button, videoId) {
         button.innerText = `📀Loading${dots}`;
     }, 500);
 
-    const downloadSection = document.getElementById(`download-${videoId}`);
-    if (!downloadSection) {
-        console.error(`Download section not found for ID: download-${videoId}`);
-        clearInterval(loadingInterval);
-        button.innerText = originalText;
-        button.disabled = false;
-        return;
-    }
-
+    const downloadSection = document.getElementById(`download-${videoUrl}`);
     downloadSection.innerHTML = "";
     downloadSection.style.display = "block";
 
     try {
-        const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
         const mp3ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp3?url=${encodeURIComponent(videoUrl)}`;
         const mp4ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp4?url=${encodeURIComponent(videoUrl)}&reso=360p`;
 
@@ -131,18 +120,20 @@ async function fetchDownloadLinks(button, videoId) {
             fetchWithRetry(mp4ApiUrl, {}, -1)
         ]);
 
-        let mp3Data = {}, mp4Data = {};
+        let mp3Data, mp4Data;
 
         try {
             mp3Data = await mp3Response.json();
         } catch (e) {
             console.error("MP3 JSON Parsing Error:", e);
+            mp3Data = {};
         }
 
         try {
             mp4Data = await mp4Response.json();
         } catch (e) {
             console.error("MP4 JSON Parsing Error:", e);
+            mp4Data = {};
         }
 
         if (mp3Data.status && mp3Data.download?.downloadUrl) {

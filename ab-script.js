@@ -99,7 +99,7 @@ async function fetchVideos() {
     }
 }
 
-async function fetchDownloadLinks(button, videoUrl) {
+async function fetchDownloadLinks(button, videoId) { 
     const originalText = button.innerText;
     button.disabled = true;
 
@@ -109,11 +109,20 @@ async function fetchDownloadLinks(button, videoUrl) {
         button.innerText = `📀Loading${dots}`;
     }, 500);
 
-    const downloadSection = document.getElementById(`download-${videoUrl}`);
+    const downloadSection = document.getElementById(`download-${videoId}`);
+    if (!downloadSection) {
+        console.error(`Download section not found for ID: download-${videoId}`);
+        clearInterval(loadingInterval);
+        button.innerText = originalText;
+        button.disabled = false;
+        return;
+    }
+
     downloadSection.innerHTML = "";
     downloadSection.style.display = "block";
 
     try {
+        const videoUrl = `https://www.youtube.com/watch?v=${videoId}`;
         const mp3ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp3?url=${encodeURIComponent(videoUrl)}`;
         const mp4ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp4?url=${encodeURIComponent(videoUrl)}&reso=360p`;
 
@@ -122,20 +131,18 @@ async function fetchDownloadLinks(button, videoUrl) {
             fetchWithRetry(mp4ApiUrl, {}, -1)
         ]);
 
-        let mp3Data, mp4Data;
+        let mp3Data = {}, mp4Data = {};
 
         try {
             mp3Data = await mp3Response.json();
         } catch (e) {
             console.error("MP3 JSON Parsing Error:", e);
-            mp3Data = {};
         }
 
         try {
             mp4Data = await mp4Response.json();
         } catch (e) {
             console.error("MP4 JSON Parsing Error:", e);
-            mp4Data = {};
         }
 
         if (mp3Data.status && mp3Data.download?.downloadUrl) {

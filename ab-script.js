@@ -7,18 +7,18 @@ async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 8000); 
 
-            console.log(Attempt ${attempt + 1} - Fetching: ${url});
+            console.log(`Attempt ${attempt + 1} - Fetching: ${url}`);
             const response = await fetch(url, { ...options, signal: controller.signal });
             clearTimeout(timeoutId);
 
             if (!response.ok) {
-                throw new Error(HTTP error! Status: ${response.status});
+                throw new Error(`HTTP error! Status: ${response.status}`);
             }
 
-            console.log(Success after ${attempt + 1} attempts.);
+            console.log(`Success after ${attempt + 1} attempts.`);
             return response;
         } catch (error) {
-            console.error(Attempt ${attempt + 1} failed: ${error.message});
+            console.error(`Attempt ${attempt + 1} failed: ${error.message}`);
             attempt++;
 
             if (retries !== -1 && attempt >= retries) {
@@ -27,7 +27,7 @@ async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
             }
 
             const delay = backoff * attempt;
-            console.log(Retrying in ${delay}ms...);
+            console.log(`Retrying in ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
         }
     }
@@ -61,7 +61,7 @@ async function fetchVideos() {
             const videoCard = document.createElement("li");
             videoCard.classList.add("video-card");
 
-            videoCard.innerHTML = 
+            videoCard.innerHTML = `
                 <img src="${video.thumbnail}" alt="${video.title}">
                 <div class="video-info">
                     <h3><a href="${video.url}" target="_blank">${video.title}</a></h3>
@@ -71,12 +71,12 @@ async function fetchVideos() {
                     <button class="download-button" onclick="fetchDownloadLinks(this, '${video.url}')">Download</button>
                     <div class="download-section" id="download-${video.url}" style="display: none;"></div>
                 </div>
-            ;
+            `;
 
             resultsContainer.appendChild(videoCard);
         });
     } catch (error) {
-        resultsContainer.innerHTML = <p>Failed to fetch results. Please try again later.</p>;
+        resultsContainer.innerHTML = "<p>Failed to fetch results. Please try again later.</p>";
         console.error(error);
     } finally {
         loadingDiv.classList.add("hidden");
@@ -90,16 +90,16 @@ async function fetchDownloadLinks(button, videoUrl) {
     let dots = "";
     const loadingInterval = setInterval(() => {
         dots = dots.length < 4 ? dots + "." : "";
-        button.innerText = 📀Loading${dots};
+        button.innerText = `📀Loading${dots}`;
     }, 500);
 
-    const downloadSection = document.getElementById(download-${videoUrl});
+    const downloadSection = document.getElementById(`download-${videoUrl}`);
     downloadSection.innerHTML = "";
     downloadSection.style.display = "block";
 
     try {
         const mp3ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp3?url=${encodeURIComponent(videoUrl)}`;
-        const mp4ApiUrl =`https://ditzdevs-ytdl-api.hf.space/api/ytmp4?url=${encodeURIComponent(videoUrl)}&reso=360p`;
+        const mp4ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp4?url=${encodeURIComponent(videoUrl)}&reso=360p`;
 
         const [mp3Response, mp4Response] = await Promise.all([
             fetchWithRetry(mp3ApiUrl, {}, -1),
@@ -126,7 +126,7 @@ async function fetchDownloadLinks(button, videoUrl) {
             audioDownloadButton.classList.add("download-button");
             audioDownloadButton.href = proxyUrl + encodeURIComponent(mp3Data.download.downloadUrl);
             audioDownloadButton.target = "_blank";
-            audioDownloadButton.innerText = Download Audio (MP3);
+            audioDownloadButton.innerText = "Download Audio (MP3)";
             downloadSection.appendChild(audioDownloadButton);
         }
 
@@ -135,7 +135,7 @@ async function fetchDownloadLinks(button, videoUrl) {
             videoDownloadButton.classList.add("download-button");
             videoDownloadButton.href = proxyUrl + encodeURIComponent(mp4Data.download.downloadUrl);
             videoDownloadButton.target = "_blank";
-            videoDownloadButton.innerText = Download Video (MP4 360p);
+            videoDownloadButton.innerText = "Download Video (MP4 360p)";
             downloadSection.appendChild(videoDownloadButton);
         }
 
@@ -143,11 +143,11 @@ async function fetchDownloadLinks(button, videoUrl) {
             downloadSection.innerHTML = "<p>No download links available.</p>";
         }
     } catch (error) {
-        downloadSection.innerHTML = <p>Failed to fetch download links. Please try again later.</p>;
+        downloadSection.innerHTML = "<p>Failed to fetch download links. Please try again later.</p>";
         console.error(error);
     } finally {
         clearInterval(loadingInterval);
         button.innerText = originalText;
         button.disabled = false;
     }
-} 
+}

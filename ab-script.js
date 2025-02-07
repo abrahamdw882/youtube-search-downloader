@@ -34,7 +34,7 @@ async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
 }
 
 async function fetchVideos() {
-    const query = document.getElementById("searchQuery").value;
+    let query = document.getElementById("searchQuery").value;
     const resultsContainer = document.getElementById("results");
     const loadingDiv = document.getElementById("loading");
     resultsContainer.innerHTML = "";
@@ -45,10 +45,14 @@ async function fetchVideos() {
     }
 
     loadingDiv.classList.remove("hidden");
+    query = query.replace(
+        /https?:\/\/youtu\.be\/([a-zA-Z0-9_-]+)(\?.*)?/,
+        "https://www.youtube.com/watch?v=$1"
+    );
 
     try {
         const apiUrl = `https://weeb-api.vercel.app/ytsearch?query=${encodeURIComponent(query)}`;
-        const response = await fetchWithRetry(proxyUrl + encodeURIComponent(apiUrl), {}, -1); 
+        const response = await fetchWithRetry(proxyUrl + encodeURIComponent(apiUrl), {}, -1);
 
         const data = await response.json();
 
@@ -121,6 +125,7 @@ async function fetchDownloadLinks(button, videoUrl) {
             console.error("MP4 JSON Parsing Error:", e);
             mp4Data = {};
         }
+
         if (mp3Data.status && mp3Data.download?.downloadUrl) {
             const audioDownloadButton = document.createElement("a");
             audioDownloadButton.classList.add("download-button");

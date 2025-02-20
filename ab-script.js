@@ -103,7 +103,7 @@ async function fetchDownloadLinks(button, videoUrl) {
 
     try {
         const mp3ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp3?url=${encodeURIComponent(videoUrl)}`;
-        const mp4ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp4?url=${encodeURIComponent(videoUrl)}&reso=360p`;
+        const mp4ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp4?url=${encodeURIComponent(videoUrl)}&reso=480p`;
 
         const [mp3Response, mp4Response] = await Promise.all([
             fetchWithRetry(mp3ApiUrl, {}, -1),

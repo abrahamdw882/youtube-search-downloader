@@ -51,7 +51,7 @@ async function fetchVideos() {
     );
 
     try {
-        const apiUrl = `https://weeb-api.vercel.app/ytsearch?query=${encodeURIComponent(query)}`;
+        const apiUrl = `https://ab-yts.abrahamdw882.workers.dev?query=${encodeURIComponent(query)}`;
         const response = await fetchWithRetry(proxyUrl + encodeURIComponent(apiUrl), {}, -1);
 
         const data = await response.json();

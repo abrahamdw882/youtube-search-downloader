@@ -2,10 +2,10 @@ const proxyUrl = "https://ab-ytdl-processing.abrahamdw882.workers.dev/?u=";
 
 async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
     let attempt = 0;
-    while (attempt < retries || retries === -1) { 
+    while (attempt < retries || retries === -1) {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000); 
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
 
             console.log(`Attempt ${attempt + 1} - Fetching: ${url}`);
             const response = await fetch(url, { ...options, signal: controller.signal });
@@ -53,8 +53,6 @@ async function fetchVideos() {
     try {
         const apiUrl = `https://ab-yts.abrahamdw882.workers.dev?query=${encodeURIComponent(query)}`;
         const response = await fetchWithRetry(apiUrl, {}, -1);
-
-
         const data = await response.json();
 
         if (!data || (Array.isArray(data) && data.length === 0)) {
@@ -102,52 +100,53 @@ async function fetchDownloadLinks(button, videoUrl) {
     downloadSection.innerHTML = "";
     downloadSection.style.display = "block";
 
+    videoUrl = videoUrl.replace(
+        /https?:\/\/(www\.)?youtube\.com\/watch\?v=([a-zA-Z0-9_-]+).*/,
+        "https://youtu.be/$2"
+    );
+
     try {
-       const mp3ApiUrl = `https://ab-ytdlv2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}&format=mp3`;
-       const mp4ApiUrl = `https://ab-ytdlv2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}&format=720`;
+        const mp3ApiUrl = `https://ab-ytdlv2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}&format=mp3`;
+        const mp4ApiUrl = `https://ab-ytdlv2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}&format=720`;
 
         const [mp3Response, mp4Response] = await Promise.all([
             fetchWithRetry(mp3ApiUrl, {}, -1),
             fetchWithRetry(mp4ApiUrl, {}, -1)
         ]);
 
-        let mp3Data, mp4Data;
+        let mp3Data = {}, mp4Data = {};
 
         try {
             mp3Data = await mp3Response.json();
         } catch (e) {
             console.error("MP3 JSON Parsing Error:", e);
-            mp3Data = {};
         }
 
         try {
             mp4Data = await mp4Response.json();
         } catch (e) {
             console.error("MP4 JSON Parsing Error:", e);
-            mp4Data = {};
         }
 
         if (mp3Data.success && mp3Data.data?.downloadUrl) {
-    const audioDownloadButton = document.createElement("a");
-    audioDownloadButton.classList.add("download-button");
-    audioDownloadButton.href = proxyUrl + encodeURIComponent(mp3Data.data.downloadUrl);
-    audioDownloadButton.target = "_blank";
-    audioDownloadButton.innerText = "Download Audio (MP3)";
-    downloadSection.appendChild(audioDownloadButton);
-}
-
+            const audioDownloadButton = document.createElement("a");
+            audioDownloadButton.classList.add("download-button");
+            audioDownloadButton.href = proxyUrl + encodeURIComponent(mp3Data.data.downloadUrl);
+            audioDownloadButton.target = "_blank";
+            audioDownloadButton.innerText = "Download Audio (MP3)";
+            downloadSection.appendChild(audioDownloadButton);
+        }
 
         if (mp4Data.success && mp4Data.data?.downloadUrl) {
-    const videoDownloadButton = document.createElement("a");
-    videoDownloadButton.classList.add("download-button");
-    videoDownloadButton.href = proxyUrl + encodeURIComponent(mp4Data.data.downloadUrl);
-    videoDownloadButton.target = "_blank";
-    videoDownloadButton.innerText = "Download Video (MP4 720p)";
-    downloadSection.appendChild(videoDownloadButton);
-}
+            const videoDownloadButton = document.createElement("a");
+            videoDownloadButton.classList.add("download-button");
+            videoDownloadButton.href = proxyUrl + encodeURIComponent(mp4Data.data.downloadUrl);
+            videoDownloadButton.target = "_blank";
+            videoDownloadButton.innerText = "Download Video (MP4 720p)";
+            downloadSection.appendChild(videoDownloadButton);
+        }
 
-
-        if (!mp3Data.status && !mp4Data.status) {
+        if (!mp3Data.success && !mp4Data.success) {
             downloadSection.innerHTML = "<p>No download links available.</p>";
         }
     } catch (error) {

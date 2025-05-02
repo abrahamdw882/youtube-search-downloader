@@ -103,8 +103,8 @@ async function fetchDownloadLinks(button, videoUrl) {
     downloadSection.style.display = "block";
 
     try {
-        const mp3ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp3?url=${encodeURIComponent(videoUrl)}`;
-        const mp4ApiUrl = `https://ditzdevs-ytdl-api.hf.space/api/ytmp4?url=${encodeURIComponent(videoUrl)}&reso=480p`;
+       const mp3ApiUrl = `https://ab-ytdlv2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}&format=mp3`;
+       const mp4ApiUrl = `https://ab-ytdlv2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}&format=720`;
 
         const [mp3Response, mp4Response] = await Promise.all([
             fetchWithRetry(mp3ApiUrl, {}, -1),
@@ -127,23 +127,25 @@ async function fetchDownloadLinks(button, videoUrl) {
             mp4Data = {};
         }
 
-        if (mp3Data.status && mp3Data.download?.downloadUrl) {
-            const audioDownloadButton = document.createElement("a");
-            audioDownloadButton.classList.add("download-button");
-            audioDownloadButton.href = proxyUrl + encodeURIComponent(mp3Data.download.downloadUrl);
-            audioDownloadButton.target = "_blank";
-            audioDownloadButton.innerText = "Download Audio (MP3)";
-            downloadSection.appendChild(audioDownloadButton);
-        }
+        if (mp3Data.success && mp3Data.data?.downloadUrl) {
+    const audioDownloadButton = document.createElement("a");
+    audioDownloadButton.classList.add("download-button");
+    audioDownloadButton.href = proxyUrl + encodeURIComponent(mp3Data.data.downloadUrl);
+    audioDownloadButton.target = "_blank";
+    audioDownloadButton.innerText = "Download Audio (MP3)";
+    downloadSection.appendChild(audioDownloadButton);
+}
 
-        if (mp4Data.status && mp4Data.download?.downloadUrl) {
-            const videoDownloadButton = document.createElement("a");
-            videoDownloadButton.classList.add("download-button");
-            videoDownloadButton.href = proxyUrl + encodeURIComponent(mp4Data.download.downloadUrl);
-            videoDownloadButton.target = "_blank";
-            videoDownloadButton.innerText = "Download Video (MP4 360p)";
-            downloadSection.appendChild(videoDownloadButton);
-        }
+
+        if (mp4Data.success && mp4Data.data?.downloadUrl) {
+    const videoDownloadButton = document.createElement("a");
+    videoDownloadButton.classList.add("download-button");
+    videoDownloadButton.href = proxyUrl + encodeURIComponent(mp4Data.data.downloadUrl);
+    videoDownloadButton.target = "_blank";
+    videoDownloadButton.innerText = "Download Video (MP4 720p)";
+    downloadSection.appendChild(videoDownloadButton);
+}
+
 
         if (!mp3Data.status && !mp4Data.status) {
             downloadSection.innerHTML = "<p>No download links available.</p>";

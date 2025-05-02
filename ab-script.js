@@ -52,7 +52,8 @@ async function fetchVideos() {
 
     try {
         const apiUrl = `https://ab-yts.abrahamdw882.workers.dev?query=${encodeURIComponent(query)}`;
-        const response = await fetchWithRetry(proxyUrl + encodeURIComponent(apiUrl), {}, -1);
+        const response = await fetchWithRetry(apiUrl, {}, -1);
+
 
         const data = await response.json();
 

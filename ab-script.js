@@ -88,12 +88,7 @@ async function fetchVideos() {
 async function fetchDownloadLinks(button, videoUrl) {
     const originalText = button.innerText;
     button.disabled = true;
-
-    let dots = "";
-    const loadingInterval = setInterval(() => {
-        dots = dots.length < 4 ? dots + "." : "";
-        button.innerText = `📀Loading${dots}`;
-    }, 500);
+    button.innerText = "📀Loading...";
 
     const downloadSection = document.getElementById(`download-${videoUrl}`);
     downloadSection.innerHTML = "";
@@ -101,43 +96,41 @@ async function fetchDownloadLinks(button, videoUrl) {
 
     const apiUrl = `https://ab-proytdl.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
 
-    let audioData = {}, videoData = {};
-
     try {
-        const response = await fetchWithRetry(apiUrl, {}, 5);
+        const response = await fetch(apiUrl);
         const data = await response.json();
-        if (data.audio && data.audio.length > 0) {
-            audioData = data.audio[0];
-            const audioDownloadButton = document.createElement("a");
-            audioDownloadButton.classList.add("download-button");
-            audioDownloadButton.href = audioData.download;  
-            audioDownloadButton.target = "_blank";
-            audioDownloadButton.innerText = `Download Audio (MP3)`;
-            downloadSection.appendChild(audioDownloadButton);
+
+        if (data.audio?.length > 0) {
+            const audio = data.audio[0];
+            const audioBtn = document.createElement("a");
+            audioBtn.className = "download-button";
+            audioBtn.href = audio.download;
+            audioBtn.target = "_blank";
+            audioBtn.innerText = `Download Audio (MP3)`;
+            downloadSection.appendChild(audioBtn);
         }
 
-      
-        if (data.video && data.video.length > 0) {
-            videoData = data.video[0];
-            const videoDownloadButton = document.createElement("a");
-            videoDownloadButton.classList.add("download-button");
-            videoDownloadButton.href = videoData.download;  
-            videoDownloadButton.target = "_blank";
-            videoDownloadButton.innerText = `Download Video (MP4 360p)`;
-            downloadSection.appendChild(videoDownloadButton);
+        if (data.video?.length > 0) {
+            const video = data.video[0];
+            const videoBtn = document.createElement("a");
+            videoBtn.className = "download-button";
+            videoBtn.href = video.download;
+            videoBtn.target = "_blank";
+            videoBtn.innerText = `Download Video (MP4 360p)`;
+            downloadSection.appendChild(videoBtn);
         }
 
-        if (!audioData.download && !videoData.download) {
+        if (!data.audio?.length && !data.video?.length) {
             downloadSection.innerHTML = "<p>No download links available.</p>";
         }
 
-    } catch (e) {
-        console.warn("Download fetch failed:", e.message);
+    } catch (err) {
+        console.error("Error fetching downloads:", err.message);
         downloadSection.innerHTML = "<p>Error fetching download links. Please try again later.</p>";
     }
 
-    clearInterval(loadingInterval);
     button.innerText = originalText;
     button.disabled = false;
 }
+
 

@@ -88,7 +88,12 @@ async function fetchVideos() {
 async function fetchDownloadLinks(button, videoUrl) {
     const originalText = button.innerText;
     button.disabled = true;
-    button.innerText = "📀Loading...";
+
+    let dots = "";
+    const loadingInterval = setInterval(() => {
+        dots = dots.length < 3 ? dots + "." : "";
+        button.innerText = `📀Loading${dots}`;
+    }, 400);
 
     const downloadSection = document.getElementById(`download-${videoUrl}`);
     downloadSection.innerHTML = "";
@@ -129,6 +134,7 @@ async function fetchDownloadLinks(button, videoUrl) {
         downloadSection.innerHTML = "<p>Error fetching download links. Please try again later.</p>";
     }
 
+    clearInterval(loadingInterval); 
     button.innerText = originalText;
     button.disabled = false;
 }

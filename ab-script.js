@@ -85,7 +85,6 @@ async function fetchVideos() {
         loadingDiv.classList.add("hidden");
     }
 }
-
 async function fetchDownloadLinks(button, videoUrl) {
     const originalText = button.innerText;
     button.disabled = true;
@@ -100,48 +99,45 @@ async function fetchDownloadLinks(button, videoUrl) {
     downloadSection.innerHTML = "";
     downloadSection.style.display = "block";
 
-    const mp3ApiUrl = `https://ab-ytdlv2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}&format=mp3`;
-    const mp4ApiUrl = `https://ab-ytdlv2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}&format=720`;
+    const apiUrl = `https://ab-proytdl.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
 
-    let mp3Data = {}, mp4Data = {};
-
-    try {
-        const mp3Response = await fetchWithRetry(mp3ApiUrl, {}, 5);
-        mp3Data = await mp3Response.json();
-    } catch (e) {
-        console.warn("MP3 fetch failed:", e.message);
-    }
+    let audioData = {}, videoData = {};
 
     try {
-        const mp4Response = await fetchWithRetry(mp4ApiUrl, {}, 5);
-        mp4Data = await mp4Response.json();
+        const response = await fetchWithRetry(apiUrl, {}, 5);
+        const data = await response.json();
+        if (data.audio && data.audio.length > 0) {
+            audioData = data.audio[0];
+            const audioDownloadButton = document.createElement("a");
+            audioDownloadButton.classList.add("download-button");
+            audioDownloadButton.href = audioData.download;  
+            audioDownloadButton.target = "_blank";
+            audioDownloadButton.innerText = `Download Audio (MP3)`;
+            downloadSection.appendChild(audioDownloadButton);
+        }
+
+      
+        if (data.video && data.video.length > 0) {
+            videoData = data.video[0];
+            const videoDownloadButton = document.createElement("a");
+            videoDownloadButton.classList.add("download-button");
+            videoDownloadButton.href = videoData.download;  
+            videoDownloadButton.target = "_blank";
+            videoDownloadButton.innerText = `Download Video (MP4 360p)`;
+            downloadSection.appendChild(videoDownloadButton);
+        }
+
+        if (!audioData.download && !videoData.download) {
+            downloadSection.innerHTML = "<p>No download links available.</p>";
+        }
+
     } catch (e) {
-        console.warn("MP4 fetch failed:", e.message);
-    }
-
-    if (mp3Data.success && mp3Data.data?.downloadUrl) {
-        const audioDownloadButton = document.createElement("a");
-        audioDownloadButton.classList.add("download-button");
-        audioDownloadButton.href = proxyUrl + encodeURIComponent(mp3Data.data.downloadUrl);
-        audioDownloadButton.target = "_blank";
-        audioDownloadButton.innerText = "Download Audio (MP3)";
-        downloadSection.appendChild(audioDownloadButton);
-    }
-
-    if (mp4Data.success && mp4Data.data?.downloadUrl) {
-        const videoDownloadButton = document.createElement("a");
-        videoDownloadButton.classList.add("download-button");
-        videoDownloadButton.href = proxyUrl + encodeURIComponent(mp4Data.data.downloadUrl);
-        videoDownloadButton.target = "_blank";
-        videoDownloadButton.innerText = "Download Video (MP4 720p)";
-        downloadSection.appendChild(videoDownloadButton);
-    }
-
-    if (!mp3Data.success && !mp4Data.success) {
-        downloadSection.innerHTML = "<p>No download links available.</p>";
+        console.warn("Download fetch failed:", e.message);
+        downloadSection.innerHTML = "<p>Error fetching download links. Please try again later.</p>";
     }
 
     clearInterval(loadingInterval);
     button.innerText = originalText;
     button.disabled = false;
 }
+

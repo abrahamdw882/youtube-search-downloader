@@ -1,142 +1,109 @@
-const proxyUrl = "https://ab-ytdl-processing.abrahamdw882.workers.dev/?u=";
+    async function fetchVideos() {
+        let query = document.getElementById("searchQuery").value.trim();
+        const resultsContainer = document.getElementById("results");
+        const loadingDiv = document.getElementById("loading");
 
-async function fetchWithRetry(url, options = {}, retries = 5, backoff = 500) {
-    let attempt = 0;
-    while (attempt < retries || retries === -1) { 
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); 
-
-            console.log(`Attempt ${attempt + 1} - Fetching: ${url}`);
-            const response = await fetch(url, { ...options, signal: controller.signal });
-            clearTimeout(timeoutId);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
-            }
-
-            console.log(`Success after ${attempt + 1} attempts.`);
-            return response;
-        } catch (error) {
-            console.error(`Attempt ${attempt + 1} failed: ${error.message}`);
-            attempt++;
-
-            if (retries !== -1 && attempt >= retries) {
-                console.error("Max retries reached. Request failed.");
-                throw error;
-            }
-
-            const delay = backoff * attempt;
-            console.log(`Retrying in ${delay}ms...`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-        }
-    }
-}
-
-async function fetchVideos() {
-    let query = document.getElementById("searchQuery").value;
-    const resultsContainer = document.getElementById("results");
-    const loadingDiv = document.getElementById("loading");
-    resultsContainer.innerHTML = "";
-
-    if (!query) {
-        resultsContainer.innerHTML = "<p>Please enter a search query or YouTube URL.</p>";
-        return;
-    }
-
-    loadingDiv.classList.remove("hidden");
-    query = query.replace(
-        /https?:\/\/youtu\.be\/([a-zA-Z0-9_-]+)(\?.*)?/,
-        "https://www.youtube.com/watch?v=$1"
-    );
-
-    try {
-        const apiUrl = `https://ab-yts.abrahamdw882.workers.dev?query=${encodeURIComponent(query)}`;
-        const response = await fetchWithRetry(apiUrl, {}, -1);
-        const data = await response.json();
-
-        if (!data || (Array.isArray(data) && data.length === 0)) {
-            resultsContainer.innerHTML = "<p>No results found.</p>";
+        if (!query) {
+            alert("Please enter a search term or YouTube URL");
             return;
         }
 
-        data.forEach((video) => {
-            const videoCard = document.createElement("li");
-            videoCard.classList.add("video-card");
+        query = query.replace(
+            /https?:\/\/youtu\.be\/([a-zA-Z0-9_-]+)(\?.*)?/,
+            "https://www.youtube.com/watch?v=$1"
+        );
 
-            videoCard.innerHTML = `
-                <img src="${video.thumbnail}" alt="${video.title}">
-                <div class="video-info">
-                    <h3><a href="${video.url}" target="_blank">${video.title}</a></h3>
-                    <p>Author: <a href="${video.author.url}" target="_blank">${video.author.name}</a></p>
-                    <p>Views: ${video.views.toLocaleString()}</p>
-                    <p>Duration: ${video.duration.timestamp}</p>
-                    <button class="download-button" onclick="fetchDownloadLinks(this, '${video.url}')">Download</button>
-                    <div class="download-section" id="download-${video.url}" style="display: none;"></div>
+        try {
+            resultsContainer.innerHTML = '';
+            loadingDiv.classList.remove("hidden");
+
+            const apiUrl = `https://ab-yts.abrahamdw882.workers.dev?query=${encodeURIComponent(query)}`;
+            const response = await fetch(apiUrl);
+            
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            const data = await response.json();
+
+            if (!data.length) {
+                resultsContainer.innerHTML = `<p class="error">No videos found. Try a different search</p>`;
+                return;
+            }
+
+            resultsContainer.innerHTML = data.map(video => `
+                <div class="video-card">
+                    <img src="${video.thumbnail}" class="thumbnail" alt="${video.title}">
+                    <div class="video-content">
+                        <h3 class="video-title">
+                            <a href="${video.url}" target="_blank">${video.title}</a>
+                        </h3>
+                        <div class="video-meta">
+                            <p><i class="fas fa-user"></i> 
+                                ${video.author ? 
+                                    `<a href="${video.author.url}" target="_blank">${video.author.name}</a>` : 
+                                    'Unknown author'}
+                            </p>
+                            <p><i class="fas fa-eye"></i> ${(video.views?.toLocaleString() || 'N/A')} views</p>
+                            <p><i class="fas fa-clock"></i> ${video.duration?.timestamp || '00:00'}</p>
+                        </div>
+                        <button class="download-button" onclick="fetchDownloadLinks(this, '${video.url}')">
+                            <i class="fas fa-download"></i>
+                            Download
+                        </button>
+                        <div class="download-section" id="download-${video.url}"></div>
+                    </div>
                 </div>
+            `).join('');
+
+        } catch (error) {
+            console.error("Fetch error:", error);
+            resultsContainer.innerHTML = `
+                <p class="error">
+                    Error loading videos: ${error.message}<br>
+                    Please check your connection and try again
+                </p>
             `;
-
-            resultsContainer.appendChild(videoCard);
-        });
-    } catch (error) {
-        resultsContainer.innerHTML = "<p>Failed to fetch results. Please try again later.</p>";
-        console.error(error);
-    } finally {
-        loadingDiv.classList.add("hidden");
-    }
-}
-async function fetchDownloadLinks(button, videoUrl) {
-    const originalText = button.innerText;
-    button.disabled = true;
-
-    let dots = "";
-    const loadingInterval = setInterval(() => {
-        dots = dots.length < 3 ? dots + "." : "";
-        button.innerText = `📀Loading${dots}`;
-    }, 400);
-
-    const downloadSection = document.getElementById(`download-${videoUrl}`);
-    downloadSection.innerHTML = "";
-    downloadSection.style.display = "block";
-
-    const apiUrl = `https://ab-proytdl.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
-
-    try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        if (data.audio?.length > 0) {
-            const audio = data.audio[0];
-            const audioBtn = document.createElement("a");
-            audioBtn.className = "download-button";
-            audioBtn.href = audio.download;
-            audioBtn.target = "_blank";
-            audioBtn.innerText = `Download Audio (MP3)`;
-            downloadSection.appendChild(audioBtn);
+        } finally {
+            loadingDiv.classList.add("hidden");
         }
-
-        if (data.video?.length > 0) {
-            const video = data.video[0];
-            const videoBtn = document.createElement("a");
-            videoBtn.className = "download-button";
-            videoBtn.href = video.download;
-            videoBtn.target = "_blank";
-            videoBtn.innerText = `Download Video (MP4 360p)`;
-            downloadSection.appendChild(videoBtn);
-        }
-
-        if (!data.audio?.length && !data.video?.length) {
-            downloadSection.innerHTML = "<p>No download links available.</p>";
-        }
-
-    } catch (err) {
-        console.error("Error fetching downloads:", err.message);
-        downloadSection.innerHTML = "<p>Error fetching download links. Please try again later.</p>";
     }
 
-    clearInterval(loadingInterval); 
-    button.innerText = originalText;
-    button.disabled = false;
-}
+        async function fetchDownloadLinks(button, videoUrl) {
+            const originalContent = button.innerHTML;
+            button.innerHTML = `
+                <span class="button-content">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Loading...
+                </span>
+            `;
+            button.disabled = true;
 
+            const downloadSection = document.getElementById(`download-${videoUrl}`);
+            downloadSection.innerHTML = '';
 
+            try {
+                const apiUrl = `https://ab-proytdl.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                downloadSection.innerHTML = `
+                    ${data.audio?.map(audio => `
+                        <a href="${audio.download}" class="download-button" target="_blank">
+                            <i class="fas fa-music"></i>
+                            Download MP3 (${audio.quality})
+                        </a>
+                    `).join('')}
+                    
+                    ${data.video?.map(video => `
+                        <a href="${video.download}" class="download-button" target="_blank">
+                            <i class="fas fa-video"></i>
+                            Download MP4 (${video.quality})
+                        </a>
+                    `).join('')}
+                `;
+            } catch (error) {
+                downloadSection.innerHTML = `<p class="error">Error loading download options</p>`;
+            } finally {
+                button.innerHTML = originalContent;
+                button.disabled = false;
+            }
+        }

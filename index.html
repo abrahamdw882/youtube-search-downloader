@@ -1,466 +1,565 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/x-icon"
-        href="https://files.catbox.moe/nu3fxr.jpg" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <meta property="og:locale" content="en_US" />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content=" BY AB-TECH" />
-    <meta name="keywords"
-        content="Devi,programming,Ethical,Anime Fan" />
-  
-    <meta itemprop="image" content="https://files.catbox.moe/nu3fxr.jpg" />
-    <meta property="og:image" content="https://files.catbox.moe/nu3fxr.jpg" />
-    <meta property="og:image:secure_url"
-        content="https://files.catbox.moe/nu3fxr.jpg" />
-    <meta property="og:image:width" content="650" />
-    <meta property="og:image:height" content="350" />
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-  <title>YouTube mp3 and Mp4 Search and Downloader</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background:linear-gradient(272deg, #000000 0%, #2196f3 100%);
-      color: #333;
-    }
+    <title>YouTube Downloader</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2196f3;
+            --secondary: #2729b0;
+            --background: linear-gradient(45deg, #000428, #004e92);
+            --glass: rgba(255, 255, 255, 0.1);
+        }
 
-    .hidden { display: none; }
-    .container {
-      width: 90%;
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 20px;
-      background: linear-gradient(335deg, #2729b0 0%, #efefef 100%);
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+            transition: all 0.2s ease;
+        }
 
-    h1 {
-      text-align: center;
-      color: #444;
-    }
+        body {
+            background: var(--background);
+            color: white;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
 
-    .search-box {
-      display: flex;
-      margin-bottom: 20px;
-    }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
 
-    .search-box input {
-      flex: 1;
-      padding: 10px;
-      font-size: 12px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      margin-right: 10px;
-    }
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
 
-    .search-box button {
-      padding: 10px 20px;
-      font-size: 16px;
-      color: #fff;
-      background-color: #08080a;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
+        .title {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: #ffffff;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-    .search-box button:hover {
-      background-color: #0c1b0c;
-    }
-    
-    #loading { 
-      font-size: 18px;
-      color: #fff;
-      background:linear-gradient(272deg, #000000 0%, #2196f3 100%);
-      padding: 10px;
-      border-radius: 5px;
-      text-align: center;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      height: 25px;
-      transform: translate(-50%, -50%);
-      animation: spin 1s linear infinite;
-      z-index: 1000; 
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-     
-    .results {
-      list-style: none;
-      padding: 0;
-    }
+        .search-container {
+            max-width: 754px;
+            margin: 0 auto 2rem;
+            position: relative;
+            backdrop-filter: blur(10px);
+            background: var(--glass);
+            border-radius: 50px;
+            padding: 5px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
 
-    .video-card {
-      display: flex;
-      align-items: flex-start;
-      margin-bottom: 20px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      overflow: hidden;
-      background: #f9f9f9;
-    }
+        .search-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 33px;
+            background: transparent;
+            color: white;
+            font-size: 1rem;
+            padding-right: 120px;
+        }
 
-    .video-card img {
-      width: 150px;
-      height: auto;
-      object-fit: cover;
-    }
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
 
-    .video-info {
-      padding: 10px;
-      flex: 1;
-    }
+        .search-button {
+            position: absolute;
+            right: 15px;
+    top: 11px;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(45deg, #2196f3, #2729b0);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
 
-    .video-info h3 {
-      margin: 0 0 10px;
-      font-size: 18px;
-    }
+        .search-button:hover {
+            transform: scale(0.98);
+        }
 
-    .video-info p {
-      margin: 0;
-      font-size: 14px;
-      color: #3f1818;
-    }
+        .results-grid {
+            display: grid;
+            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
 
-    .video-info a {
-      color: #000000;
-      text-decoration: none;
-    }
+        .video-card {
+            background: var(--glass);
+            border-radius: 1rem;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
 
-    .video-info a:hover {
-      text-decoration: underline;
-    }
+        .video-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
 
-    .download-section {
-      margin-top: 10px;
-      background: #f1f1f1;
-      padding: 10px;
-      border-radius: 5px;
-    }
+        .thumbnail {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
 
-    .download-button {
-      margin: 5px 0;
-      display: block;
-      padding: 8px 12px;
-      font-size: 14px;
-      color: #000000;
-      background-color: #007bff;
-      border: none;
-      border-radius: 4px;
-      text-align: center;
-      text-decoration: none;
-      cursor: pointer;
-    }
+        .video-content {
+            padding: 1.5rem;
+        }
 
-    .download-button:hover {
-      background-color: #0056b3;
-    }
+        .video-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
 
-    @media (max-width: 560px) {
-      body {
-        text-align: center;
-        margin: 0;
-        padding: 0;
-        background:linear-gradient(272deg, #000000 0%, #2196f3 100%);
-      }
+        .video-meta {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
 
-      .container {
-        margin: 0 auto;
-        width: 100%;
-        max-width: 300px;
-        padding: 10px;
-        background: linear-gradient(335deg, #2729b0 0%, #efefef 100%);
-      }
-
-      .video-card {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding: 10px;
-        margin: 10px auto;
-        max-width: 300px;
-        background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      }
-
-      .video-card img {
-        width: 100%;
-        max-width: 280px;
-        height: auto;
-        margin-bottom: 10px;
-        border-radius: 8px;
-      }
-
-      .video-info {
-        width: 100%;
-        padding: 10px 0;
-        text-align: center;
-      }
-
-      .video-info h3 {
-        font-size: 16px;
-        margin-bottom: 8px;
-      }
-
-      .video-info p {
-        font-size: 14px;
-        margin: 5px 0;
-      }
-
-      .video-info a {
-        color: #000000;
-        text-decoration: none;
-      }
-
-      .video-info a:hover {
-        text-decoration: underline;
-      }
-
-      .search-box {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-        margin: 0 auto 20px;
-      }
-
-      .search-box input,
-      .search-box button {
-        width: 100%;
-        padding: 12px;
-        font-size: 14px;
-        border-radius: 6px;
-        box-sizing: border-box;
-      }
-
-      .search-box button {
-        background-color: #020702;
-        color: white;
-        border: none;
-        cursor: pointer;
-      }
-
-      .search-box button:hover {
-        background-color: #292e29;
-      }
-
-      .results {
-        list-style: none;
-        padding: 0;
-        margin: 0 auto;
-        text-align: center;
-      }
-
-      .download-section {
-        width: 100%;
-        max-width: 300px;
-        text-align: center;
-        padding: 10px 0;
-        margin: 0 auto;
-      }
-
-      .download-button {
-        display: inline-block;
-        font-size: 14px;
-        padding: 10px 15px;
-        margin: 8px 0;
-        background-color: #3590f1;
-        color: white;
-        border-radius: 4px;
-        text-decoration: none;
-        width: 100%;
-        max-width: 250px;
-        cursor: pointer;
-        text-align: center;
-      }
-
-      .download-button:hover {
-        background-color: #0056b3;
-      }
-                 h1 {
-        text-align: center;
-        font-size: 18px;
-                 }
-    }
-
-    @media (max-width: 1000px) {
-  body {
-    text-align: left;
-    margin: 0;
-    padding: 0;
-    background: linear-gradient(272deg, #000000 0%, #2196f3 100%);
-  }
-
-  .container {
-    width: 90%;
-    max-width: 700px;
-    margin: 30px auto;
-    padding: 20px;
-    background: linear-gradient(335deg, #2729b0 0%, #efefef 100%);
-    border-radius: 8px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-  }
-
-  h1 {
-    text-align: center;
-    font-size: 28px;
-    margin-bottom: 20px;
-    color: #333;
-  }
-
-  .search-box {
+        .download-section {
     display: flex;
-    gap: 10px;
-    margin-bottom: 30px;
-  }
+    gap: 0.5rem;
+    flex-direction: column;
+    margin-top: 0.5rem; /* Add this line */
+    padding-top: 0.5rem; /* Optional: Add subtle separation */
+    border-top: 1px solid rgba(255, 255, 255, 0.1); /* Optional: Add divider */
+}
 
-  .search-box input {
-    flex: 1;
-    padding: 15px;
-    font-size: 18px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-  }
+        .download-button {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1.25rem;
+            background:linear-gradient(45deg, #404040, #000000);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            min-width: 140px;
+            justify-content: center;
+        }
 
-  .search-box button {
-    padding: 15px 25px;
-    font-size: 18px;
-    color: #fff;
-    background-color: #08080a;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
+        .download-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
 
-  .search-box button:hover {
-    background-color: #4c7fae;
-  }
+        .download-button::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            transition: 0.5s;
+        }
 
-  .results {
-    list-style: none;
-    padding: 0;
-  }
+        .download-button:hover::before {
+            left: 100%;
+        }
 
-  .video-card {
-    display: flex;
-    align-items: center;
-    margin-bottom: 25px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    overflow: hidden;
-    background: #f9f9f9;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
+        .loading {
+            display: flex;
+            justify-content: center;
+            padding: 2rem;
+            height: 60px;
+            position: relative;
+            transition: opacity 0.3s ease;
+        }
 
-  .video-card img {
-    width: 220px;
-    height: 240px;
-    object-fit: cover;
-    border-right: 1px solid #ddd;
+        .loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+            font-size: 1.2em;
+            width: 1em;
+            height: 1em;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @media (max-width: 480px) { 
+            .download-button{ font-size: 13px;}
+        
     
-  }
+    }
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem 1rem;
+            }
+
+            .title {
+                font-size: 2rem;
+            }
 
 
-  .video-info {
-    padding: 20px;
-    flex: 1;
-  }
+            .search-container {
+           max-width: 754px;
+         margin: 0 auto 2rem;
+        position: relative;
+       backdrop-filter: blur(10px);
+         background: rgb(0 0 0 / 10%);
+       border-radius: 20px;
+       padding: 5px;
+     box-shadow: 0 4px 30px rgb(0 99 255 / 10%);
+}
 
-  .video-info h3 {
-    margin: 0 0 10px;
-    font-size: 20px;
-    line-height: 1.4;
-  }
+    .search-input {
+        padding: 0.875rem 1.25rem;
+                font-size: 13px;
+        padding-right: 1rem;
+        width: 100%;
+        border-radius: 25px;
+        border-radius: 8px;
+    }
 
-  .video-info p {
-    margin: 0 0 8px;
-    font-size: 16px;
-    color: #555;
-  }
+    .search-button {
+        position: static;
+        width: 100%;
+        justify-content: center;
+        padding: 1rem;
+        font-size: 1rem;
+        margin-top: 0.5rem;
+    }
+    .search-button {
+        font-size: 14px;
+        padding: 1rem 2rem;
+        border-radius: 25px;
+        top: auto;
+        right: auto;
+    }
 
-  .video-info a {
-    color: #000000;
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .video-card {
+                margin: 0 0.5rem;
+            }
+        }
+
+        .contact-section {
+            text-align: center;
+            margin-top: 3rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .whatsapp-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: #25D366;
+            color: white;
+            border-radius: 50px;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: transform 0.3s;
+        }
+
+        .whatsapp-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .how-to-section {
+            margin: 3rem 0;
+            padding: 2rem;
+            background: var(--glass);
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            background: linear-gradient(45deg, #fff, #2196f3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .steps-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .step-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-weight: bold;
+        }
+
+        .step-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .site-footer {
+            margin-top: 5rem;
+            padding-top: 3rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-section {
+            padding: 1rem;
+        }
+
+        .footer-title {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+        }
+
+        .footer-links a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-icon {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.8);
+            transition: color 0.3s;
+        }
+
+        .social-icon:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding: 2rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .legal-links {
+            margin-top: 1rem;
+        }
+
+        .legal-links a {
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .steps-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .footer-section {
+                text-align: center;
+            }
+            
+            .social-links {
+                justify-content: center;
+            }
+        }
+.video-title a,
+.video-meta a {
+    color: white !important;
     text-decoration: none;
-  }
+    transition: opacity 0.3s ease;
+}
 
-  .video-info a:hover {
+.video-title a:hover,
+.video-meta a:hover {
+    opacity: 0.8;
     text-decoration: underline;
-  }
-
-  .download-section {
-    margin-top: 15px;
-    padding: 15px;
-    background: #f1f1f1;
-    border-radius: 8px;
-  }
-
-  .download-button {
-    display: inline-block;
-    padding: 10px 15px;
-    font-size: 16px;
-    margin: 8px;
-    color: white;
-    background-color: #007bff;
-    border: none;
-    border-radius: 6px;
-    text-align: center;
-    text-decoration: none;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-
-  .download-button:hover {
-    background-color: #0056b3;
-  }
-
 }
-@media (min-width: 2000px) {
-  .video-card img {
-    width: 150px;
-    height: 190px;
-    object-fit: cover;
-  }
-}
-
-@media (min-width: 1015px) {
-  .video-card img {
-    width: 220px;
-    height: 230px;
-    object-fit: cover;
-  }
-}
-
-
-  </style>
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>YouTube mp3 and Mp4 Search and Downloader</h1>
-    <div class="search-box">
-      <input type="text" id="searchQuery" placeholder="Enter search query or paste link...">
-      <button onclick="fetchVideos()">Search</button>
-    </div>
-    <center><div id="loading" class="hidden">Loading...</div> </center>
-    <ul class="results" id="results"></ul>
-  </div>
-          <center></center.> <p style="color:white;">Contact me for any assistance:</p></center>
-    <div class="mt-2">
-       <center> <a href="https://api.whatsapp.com/send/?phone=233533763772&text&type=phone_number&app_absent=0" target="_blank" style="color:#29ff29;">
-            <i class='bx bxl-whatsapp bx-md'></i>
-        </a></center>
-    </div>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">YouTube Downloader</h1><br><br>
+            <form class="search-container" onsubmit="event.preventDefault(); fetchVideos();">
+                <input type="text" class="search-input" id="searchQuery" 
+                    placeholder="Search or paste YouTube URL...">
+                <button type="submit" class="search-button">
+                    <i class="fas fa-search"></i>
+                    Search
+                </button>
+            </form>
+        </header>
 
-  <script src="ab-script.js"></script>
+        <div id="loading" class="loading hidden">
+            <i class="fas fa-spinner fa-spin"></i>
+        </div>
+
+        <div class="results-grid" id="results"></div>
+
+       
+    <section class="how-to-section">
+        <h2 class="section-title">How to Use</h2>
+        <div class="steps-container">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <i class="fas fa-search step-icon"></i>
+                <h3>Search or Paste URL</h3>
+                <p>Enter keywords or paste YouTube URL in the search bar</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <i class="fas fa-download step-icon"></i>
+                <h3>Choose Quality</h3>
+                <p>Select your preferred video/audio quality from options</p>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <i class="fas fa-file-download step-icon"></i>
+                <h3>Download & Enjoy</h3>
+                <p>Click download and save content directly to your device</p>
+            </div>
+        </div>
+    </section>
+
+
+    <footer class="ab-site-footer">
+        <div class="footer-grid">
+            <div class="footer-section">
+                <h4 class="footer-title">YouTube Downloader</h4>
+                <p>High quality downloads made simple and fast</p>
+                <div class="social-links">
+                    <a href="https://wa.me//233533763772" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-linkedin"></i></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4 class="footer-title">Features</h4>
+                <ul class="footer-links">
+                    <li><a href="#">MP3 Downloads</a></li>
+                    <li><a href="#">HD Videos</a></li>
+                    <li><a href="#">Batch Processing</a></li>
+                    <li><a href="#">Format Conversion</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4 class="footer-title">Legal</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">DMCA Compliance</a></li>
+                    <li><a href="#">Cookie Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4 class="footer-title">Contact</h4>
+                <ul class="footer-links">
+                    <li><a href="https://ab-tech.zone.id">ab-tech.zone.id</a></li>
+                    <li><a href="tel:+233533763772">+233533763772</a></li>
+                    <li><a href="https://api.whatsapp.com/send/?phone=233533763772" target="_blank">WhatsApp</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 YouTube Downloader AB TECH All rights reserved.</p>
+            <div class="legal-links">
+                <a href="#">Privacy Policy</a> | 
+                <a href="#">Terms of Use</a> | 
+                <a href="#">Cookie Settings</a>
+            </div>
+        </div>
+    </footer>
+</div>
+    <script src="ab.js">
+       
+    </script>
 </body>
-</html>
+</html>  

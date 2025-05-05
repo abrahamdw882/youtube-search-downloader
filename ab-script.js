@@ -8,10 +8,11 @@
             return;
         }
 
-        query = query.replace(
-            /https?:\/\/youtu\.be\/([a-zA-Z0-9_-]+)(\?.*)?/,
-            "https://www.youtube.com/watch?v=$1"
-        );
+     query = query
+    .replace(/https?:\/\/youtu\.be\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$1")
+    .replace(/https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$2");
+
+
 
         try {
             resultsContainer.innerHTML = '';

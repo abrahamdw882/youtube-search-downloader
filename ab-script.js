@@ -1,110 +1,83 @@
-    async function fetchVideos() {
-        let query = document.getElementById("searchQuery").value.trim();
-        const resultsContainer = document.getElementById("results");
-        const loadingDiv = document.getElementById("loading");
+const $ = selector => document.querySelector(selector);
 
-        if (!query) {
-            alert("Please enter a search term or YouTube URL");
-            return;
-        }
+async function fetchVideos() {
+  const queryInput = $("#searchQuery");
+  const resultsContainer = $("#results");
+  const loadingDiv = $("#loading");
+  let query = queryInput.value.trim();
 
-     query = query
-    .replace(/https?:\/\/youtu\.be\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$1")
-    .replace(/https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$2");
+  if (!query) return alert("Enter a search term or YouTube URL");
 
 
+  query = query
+    .replace(/https?:\/\/youtu\.be\/([\w-]+)/, "https://www.youtube.com/watch?v=$1")
+    .replace(/https?:\/\/(www\.)?youtube\.com\/shorts\/([\w-]+)/, "https://www.youtube.com/watch?v=$2");
 
-        try {
-            resultsContainer.innerHTML = '';
-            loadingDiv.classList.remove("hidden");
+  resultsContainer.innerHTML = "";
+  loadingDiv.classList.remove("hidden");
 
-            const apiUrl = `https://ab-yts.abrahamdw882.workers.dev?query=${encodeURIComponent(query)}`;
-            const response = await fetch(apiUrl);
-            
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
-            const data = await response.json();
-
-            if (!data.length) {
-                resultsContainer.innerHTML = `<p class="error">No videos found. Try a different search</p>`;
-                return;
-            }
-
-            resultsContainer.innerHTML = data.map(video => `
-                <div class="video-card">
-                    <img src="${video.thumbnail}" class="thumbnail" alt="${video.title}">
-                    <div class="video-content">
-                        <h3 class="video-title">
-                            <a href="${video.url}" target="_blank">${video.title}</a>
-                        </h3>
-                        <div class="video-meta">
-                            <p><i class="fas fa-user"></i> 
-                                ${video.author ? 
-                                    `<a href="${video.author.url}" target="_blank">${video.author.name}</a>` : 
-                                    'Unknown author'}
-                            </p>
-                            <p><i class="fas fa-eye"></i> ${(video.views?.toLocaleString() || 'N/A')} views</p>
-                            <p><i class="fas fa-clock"></i> ${video.duration?.timestamp || '00:00'}</p>
-                        </div>
-                        <button class="download-button" onclick="fetchDownloadLinks(this, '${video.url}')">
-                            <i class="fas fa-download"></i>
-                            Download
-                        </button>
-                        <div class="download-section" id="download-${video.url}"></div>
-                    </div>
-                </div>
-            `).join('');
-
-        } catch (error) {
-            console.error("Fetch error:", error);
-            resultsContainer.innerHTML = `
-                <p class="error">
-                    Error loading videos: ${error.message}<br>
-                    Please check your connection and try again
-                </p>
-            `;
-        } finally {
-            loadingDiv.classList.add("hidden");
-        }
+  try {
+    const res = await fetch(`https://ab-yts.abrahamdw882.workers.dev?query=${encodeURIComponent(query)}`);
+    if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+    
+    const videos = await res.json();
+    if (!videos.length) {
+      resultsContainer.innerHTML = `<p class="error">No results. Try a different search.</p>`;
+      return;
     }
 
-        async function fetchDownloadLinks(button, videoUrl) {
-            const originalContent = button.innerHTML;
-            button.innerHTML = `
-                <span class="button-content">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    Loading...
-                </span>
-            `;
-            button.disabled = true;
+    resultsContainer.innerHTML = videos.map(video => `
+      <div class="video-card">
+        <img src="${video.thumbnail}" alt="${video.title}" class="thumbnail" />
+        <div class="video-content">
+          <h3><a href="${video.url}" target="_blank">${video.title}</a></h3>
+          <div class="video-meta">
+            <p><i class="fas fa-user"></i> 
+              ${video.author ? `<a href="${video.author.url}" target="_blank">${video.author.name}</a>` : "Unknown"}
+            </p>
+            <p><i class="fas fa-eye"></i> ${video.views?.toLocaleString() || "N/A"} views</p>
+            <p><i class="fas fa-clock"></i> ${video.duration?.timestamp || "00:00"}</p>
+          </div>
+          <button class="download-button" onclick="fetchDownloadLinks(this, '${video.url}')">
+            <i class="fas fa-download"></i> Download
+          </button>
+          <div class="download-section" id="download-${video.url}"></div>
+        </div>
+      </div>
+    `).join("");
 
-            const downloadSection = document.getElementById(`download-${videoUrl}`);
-            downloadSection.innerHTML = '';
+  } catch (err) {
+    console.error(err);
+    resultsContainer.innerHTML = `<p class="error">Error: ${err.message}</p>`;
+  } finally {
+    loadingDiv.classList.add("hidden");
+  }
+}
 
-            try {
-                const apiUrl = `https://ab-proytdl.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
-                const response = await fetch(apiUrl);
-                const data = await response.json();
+async function fetchDownloadLinks(button, videoUrl) {
+  const section = $(`#download-${videoUrl}`);
+  button.disabled = true;
+  button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
 
-                downloadSection.innerHTML = `
-                    ${data.audio?.map(audio => `
-                        <a href="${audio.download}" class="download-button" target="_blank">
-                            <i class="fas fa-music"></i>
-                            Download MP3 (${audio.quality})
-                        </a>
-                    `).join('')}
-                    
-                    ${data.video?.map(video => `
-                        <a href="${video.download}" class="download-button" target="_blank">
-                            <i class="fas fa-video"></i>
-                            Download MP4 (${video.quality})
-                        </a>
-                    `).join('')}
-                `;
-            } catch (error) {
-                downloadSection.innerHTML = `<p class="error">Error loading download options</p>`;
-            } finally {
-                button.innerHTML = originalContent;
-                button.disabled = false;
-            }
-        }
+  try {
+    const res = await fetch(`https://ab-proytdl.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`);
+    const data = await res.json();
+
+    const audioLinks = data.audio?.map(a => `
+      <a href="https://ab-proytdl.abrahamdw882.workers.dev/?url=${encodeURIComponent(a.download)}&download=true" class="download-button" target="_blank">
+        <i class="fas fa-music"></i> MP3 (${a.quality})
+      </a>`).join("") || "";
+
+    const videoLinks = data.video?.map(v => `
+      <a href="https://ab-proytdl.abrahamdw882.workers.dev/?url=${encodeURIComponent(v.download)}&download=true" class="download-button" target="_blank">
+        <i class="fas fa-video"></i> MP4 (${v.quality})
+      </a>`).join("") || "";
+
+    section.innerHTML = audioLinks + videoLinks || `<p class="error">No downloads found</p>`;
+  } catch {
+    section.innerHTML = `<p class="error">Failed to fetch download links</p>`;
+  } finally {
+    button.disabled = false;
+    button.innerHTML = `<i class="fas fa-download"></i> Download`;
+  }
+}

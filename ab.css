@@ -121,7 +121,7 @@
             padding: 1.5rem;
         }
 
-     .video-title {
+        .video-title {
             font-size: 1.1rem;
             margin-bottom: 0.75rem;
             font-weight: 600;
@@ -131,20 +131,20 @@
             overflow: hidden;
         }
 
-     .video-meta {
+        .video-meta {
             color: rgba(255, 255, 255, 0.8);
             font-size: 0.9rem;
             margin-bottom: 1rem;
         }
 
- .download-section {
-    display: flex;
-    gap: 0.5rem;
-    flex-direction: column;
-    margin-top: 0.5rem;
-    padding-top: 0.5rem; 
-    border-top: 1px solid rgba(255, 255, 255, 0.1); 
-}
+        .download-section {
+            display: flex;
+            gap: 0.5rem;
+            flex-direction: column;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem; 
+            border-top: 1px solid rgba(255, 255, 255, 0.1); 
+        }
 
         .download-button {
             display: flex;
@@ -175,12 +175,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(
-                90deg,
-                transparent,
-                rgba(255, 255, 255, 0.2),
-                transparent
-            );
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
             transition: 0.5s;
         }
 
@@ -202,29 +197,23 @@
             pointer-events: none;
         }
 
-           .fa-spinner {
-            -webkit-animation: spin 1s linear infinite;
-            animation: spin 1s linear infinite;
-            font-size: 1.2em;
-            width: 1em;
-            height: 1em;
-            display: inline-block;
-            vertical-align: middle;
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
         }
 
-        @-webkit-keyframes spin {
-    0% { -webkit-transform: rotate(0deg); }
-    100% { -webkit-transform: rotate(360deg); }
-}
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         @media (max-width: 480px) { 
             .download-button{ font-size: 13px;}
-        
-    
-    }
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 1.5rem 1rem;
@@ -234,42 +223,42 @@
                 font-size: 2rem;
             }
 
-
             .search-container {
-           max-width: 754px;
-         margin: 0 auto 2rem;
-        position: relative;
-       backdrop-filter: blur(10px);
-         background: rgb(0 0 0 / 10%);
-       border-radius: 20px;
-       padding: 5px;
-     box-shadow: 0 4px 30px rgb(0 99 255 / 10%);
-}
+                max-width: 754px;
+                margin: 0 auto 2rem;
+                position: relative;
+                backdrop-filter: blur(10px);
+                background: rgb(0 0 0 / 10%);
+                border-radius: 20px;
+                padding: 5px;
+                box-shadow: 0 4px 30px rgb(0 99 255 / 10%);
+            }
 
-    .search-input {
-        padding: 0.875rem 1.25rem;
+            .search-input {
+                padding: 0.875rem 1.25rem;
                 font-size: 13px;
-        padding-right: 1rem;
-        width: 100%;
-        border-radius: 25px;
-        border-radius: 8px;
-    }
+                padding-right: 1rem;
+                width: 100%;
+                border-radius: 25px;
+                border-radius: 8px;
+            }
 
-    .search-button {
-        position: static;
-        width: 100%;
-        justify-content: center;
-        padding: 1rem;
-        font-size: 1rem;
-        margin-top: 0.5rem;
-    }
-    .search-button {
-        font-size: 14px;
-        padding: 1rem 2rem;
-        border-radius: 25px;
-        top: auto;
-        right: auto;
-    }
+            .search-button {
+                position: static;
+                width: 100%;
+                justify-content: center;
+                padding: 1rem;
+                font-size: 1rem;
+                margin-top: 0.5rem;
+            }
+
+            .search-button {
+                font-size: 14px;
+                padding: 1rem 2rem;
+                border-radius: 25px;
+                top: auto;
+                right: auto;
+            }
 
             .results-grid {
                 grid-template-columns: 1fr;
@@ -321,9 +310,9 @@
         }
 
         .steps-container {
-          display: grid;
-         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
         }
 
         .step-card {
@@ -447,14 +436,16 @@
                 justify-content: center;
             }
         }
-      .video-title a,
-     .video-meta a {
-    color: white !important;
-    text-decoration: none;
-    transition: opacity 0.3s ease;
-       }
-.video-title a:hover,
-  .video-meta a:hover {
-    opacity: 0.8;
-    text-decoration: underline;
-}
+
+        .video-title a,
+        .video-meta a {
+            color: white !important;
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-title a:hover,
+        .video-meta a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }

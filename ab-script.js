@@ -77,7 +77,7 @@
             }
         }
 
-      async function fetchDownloadLinks(button, videoUrl) {
+       async function fetchDownloadLinks(button, videoUrl) {
     const originalContent = button.innerHTML;
     button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
     button.disabled = true;
@@ -86,74 +86,38 @@
     downloadSection.innerHTML = '';
 
     try {
-        const audioApiUrl = `https://ab-ytdlprov2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
-        const audioResponse = await fetch(audioApiUrl);
-        const audioData = await audioResponse.json();
+        const apiUrl = `https://ab-ytdlprov2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
+        const response = await fetch(apiUrl);
+        const data = await response.json();
 
-        const videoApiUrl = `https://ab-ytdlv3.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
-        const videoResponse = await fetch(videoApiUrl);
-        const videoData = await videoResponse.json();
-
-        if (audioData.audio && audioData.audio.length > 0) {
-            downloadSection.insertAdjacentHTML('beforeend', `<h4>Audio Only</h4>`);
-            audioData.audio.forEach(audio => {
-                const directUrl = audio.download;
-                const ext = audio.format ? audio.format.toUpperCase() : 'MP3';
-                const quality = audio.quality || '128';
-                
-                downloadSection.insertAdjacentHTML('beforeend', `
-                    <a href="${directUrl}" class="download-button" download>
+     
+        if (data.audio && data.audio.length > 0) {
+            data.audio.forEach(audio => {
+                const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(audio.download)}`;
+                downloadSection.innerHTML += `
+                    <a href="${proxied}" class="download-button" download>
                         <i class="fas fa-music"></i>
-                        ${ext} (${quality}kbps)
+                        MP3 Audio (${audio.quality}kbps)
                     </a>
-                `);
+                `;
             });
         }
 
-        if (videoData.code === 0 && videoData.data && Array.isArray(videoData.data.items)) {
-            const items = videoData.data.items;
-            const videoWithAudioItems = items.filter(item => item.type === "video_with_audio");
-            if (videoWithAudioItems.length > 0) {
-                downloadSection.insertAdjacentHTML('beforeend', `<h4>360px Vid</h4>`);
-                videoWithAudioItems.forEach(video => {
-                    const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(video.url)}`;
-                    const ext = video.ext ? video.ext.toUpperCase() : 'MP4';
-                    const label = video.label || (video.height ? `${video.height}p` : 'Unknown Quality');
-                    
-                    downloadSection.insertAdjacentHTML('beforeend', `
-                        <a href="${proxied}" class="download-button" download>
-                            <i class="fas fa-video"></i>
-                            ${ext} (${label})
-                        </a>
-                    `);
-                });
-            }
-
-            const videoOnlyItems = items.filter(item => item.type === "video" && item.height > 0);
-            if (videoOnlyItems.length > 0) {
-                downloadSection.insertAdjacentHTML('beforeend', `<h4>Video Only</h4>`);
-                videoOnlyItems.forEach(video => {
-                    const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(video.url)}`;
-                    const ext = video.ext ? video.ext.toUpperCase() : 'MP4';
-                    const label = video.label || (video.height ? `${video.height}p` : 'Unknown Quality');
-                    
-                    downloadSection.insertAdjacentHTML('beforeend', `
-                        <a href="${proxied}" class="download-button" download>
-                            <i class="fas fa-film"></i>
-                            ${ext} (${label})
-                        </a>
-                    `);
-                });
-            }
-        }
-
-        if (downloadSection.children.length === 0) {
-            downloadSection.innerHTML = `<p class="error">No download options available</p>`;
+        
+        if (data.video && data.video.length > 0) {
+            data.video.forEach(video => {
+                const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(video.download)}`;
+                downloadSection.innerHTML += `
+                    <a href="${proxied}" class="download-button" download>
+                        <i class="fas fa-video"></i>
+                        MP4 Video (${video.quality}p)
+                    </a>
+                `;
+            });
         }
 
     } catch (error) {
-        console.error("Download error:", error);
-        downloadSection.innerHTML = `<p class="error">Error loading download options: ${error.message}</p>`;
+        downloadSection.innerHTML = `<p class="error">Error loading download options</p>`;
     } finally {
         button.innerHTML = originalContent;
         button.disabled = false;

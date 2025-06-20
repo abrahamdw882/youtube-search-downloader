@@ -123,3 +123,9 @@
         button.disabled = false;
     }
 }
+
+ document.querySelector('.modal-button.join').addEventListener('click', function(e) {
+            e.preventDefault();
+            joinChannel();
+            window.open(this.href, '_blank');
+        });

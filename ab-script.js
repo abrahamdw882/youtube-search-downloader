@@ -1,96 +1,189 @@
  let rotation = 0;
-        let animationFrame;
+let animationFrame;
+let hasJoinedChannel = localStorage.getItem('hasJoinedChannel') === 'true';
+let pendingDownload = null;
+function initModal() {
+    const whatsappModal = document.getElementById('whatsappModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const closeModal = document.getElementById('closeModal');
+    if (!hasJoinedChannel) {
+        setTimeout(() => {
+            if (whatsappModal) whatsappModal.classList.add('active');
+        }, 3000);
+    }
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', () => {
+            if (whatsappModal) whatsappModal.classList.remove('active');
+        });
+    }
 
-        function toggleLoader(show) {
-            const loader = document.getElementById('loading');
-            if(show) {
-                loader.classList.remove('hidden');
-                startSpinner();
-            } else {
-                loader.classList.add('hidden');
-                stopSpinner();
+    if (closeModal) {
+        closeModal.addEventListener('click', () => {
+            if (whatsappModal) whatsappModal.classList.remove('active');
+        });
+    }
+    if (whatsappModal) {
+        whatsappModal.addEventListener('click', (e) => {
+            if (e.target === whatsappModal) {
+                whatsappModal.classList.remove('active');
             }
-        }
+        });
+    }
+    const joinButton = document.querySelector('.modal-button.join');
+    if (joinButton) {
+        joinButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            joinChannel();
+            window.open(this.href, '_blank');
+        });
+    }
+}
+function joinChannel() {
+    localStorage.setItem('hasJoinedChannel', 'true');
+    hasJoinedChannel = true;
+    const whatsappModal = document.getElementById('whatsappModal');
+    if (whatsappModal) whatsappModal.classList.remove('active');
+    if (pendingDownload) {
+        const { button, videoUrl } = pendingDownload;
+        fetchDownloadLinks(button, videoUrl);
+        pendingDownload = null;
+    }
+}
 
-        function startSpinner() {
-            const spinner = document.querySelector('.spinner');
-            function animate() {
-                rotation += 6;
-                spinner.style.transform = `rotate(${rotation}deg)`;
-                animationFrame = requestAnimationFrame(animate);
+function handleDownloadClick(button, videoUrl) {
+    if (!hasJoinedChannel) {
+        pendingDownload = { button, videoUrl };
+        const whatsappModal = document.getElementById('whatsappModal');
+        if (whatsappModal) whatsappModal.classList.add('active');
+        button.disabled = true;
+        button.innerHTML = `<i class="fas fa-exclamation-circle"></i> Join Required`;
+        setTimeout(() => {
+            if (!hasJoinedChannel && button) {
+                button.disabled = false;
+                button.innerHTML = `<i class="fas fa-download"></i> Download`;
             }
-            animate();
+        }, 3000);
+    } else {
+        fetchDownloadLinks(button, videoUrl);
+    }
+}
+
+function toggleLoader(show) {
+    const loader = document.getElementById('loading');
+    if (loader) {
+        if (show) {
+            loader.classList.remove('hidden');
+            startSpinner();
+        } else {
+            loader.classList.add('hidden');
+            stopSpinner();
         }
+    }
+}
 
-        function stopSpinner() {
-            cancelAnimationFrame(animationFrame);
-            rotation = 0;
+function startSpinner() {
+    const spinner = document.querySelector('.spinner');
+    if (spinner) {
+        function animate() {
+            rotation += 6;
+            spinner.style.transform = `rotate(${rotation}deg)`;
+            animationFrame = requestAnimationFrame(animate);
         }
+        animate();
+    }
+}
 
-        async function fetchVideos() {
-            let query = document.getElementById("searchQuery").value.trim();
-            const resultsContainer = document.getElementById("results");
+function stopSpinner() {
+    if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+    }
+    rotation = 0;
+}
 
-            if(!query) return;
+async function fetchVideos() {
+    const searchQuery = document.getElementById("searchQuery");
+    const resultsContainer = document.getElementById("results");
 
-            query = query
-                .replace(/https?:\/\/youtu\.be\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$1")
-                .replace(/https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$2");
+    if (!searchQuery || !resultsContainer) return;
 
-            try {
-                resultsContainer.innerHTML = '';
-                toggleLoader(true);
+    let query = searchQuery.value.trim();
+    if (!query) return;
 
-                const apiUrl = `https://ab-yts.abrahamdw882.workers.dev?query=${encodeURIComponent(query)}`;
-                const response = await fetch(apiUrl);
-                const data = await response.json();
+    query = query
+        .replace(/https?:\/\/youtu\.be\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$1")
+        .replace(/https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$2");
 
-                resultsContainer.innerHTML = data.map(video => `
-                    <div class="video-card">
-                        <img src="${video.thumbnail}" class="thumbnail" alt="${video.title}">
-                        <div class="video-content">
-                            <h3 class="video-title">
-                                <a href="${video.url}" target="_blank">${video.title}</a>
-                            </h3>
-                            <div class="video-meta">
-                                <p><i class="fas fa-user"></i> 
-                                    ${video.author ? 
-                                        `<a href="${video.author.url}" target="_blank">${video.author.name}</a>` : 
-                                        'Unknown author'}
-                                </p>
-                                <p><i class="fas fa-eye"></i> ${(video.views?.toLocaleString() || 'N/A')} views</p>
-                                <p><i class="fas fa-clock"></i> ${video.duration?.timestamp || '00:00'}</p>
-                            </div>
-                            <button class="download-button" onclick="fetchDownloadLinks(this, '${video.url}')">
-                                <i class="fas fa-download"></i>
-                                Download
-                            </button>
-                            <div class="download-section" id="download-${video.url}"></div>
-                        </div>
+    try {
+        resultsContainer.innerHTML = '';
+        toggleLoader(true);
+
+        const apiUrl = `https://ab-yts.abrahamdw882.workers.dev?query=${encodeURIComponent(query)}`;
+        const response = await fetch(apiUrl);
+        
+        if (!response.ok) throw new Error('Network response was not ok');
+        
+        const data = await response.json();
+
+        resultsContainer.innerHTML = data.map(video => `
+            <div class="video-card">
+                <img src="${video.thumbnail}" class="thumbnail" alt="${video.title}">
+                <div class="video-content">
+                    <h3 class="video-title">
+                        <a href="${video.url}" target="_blank">${video.title}</a>
+                    </h3>
+                    <div class="video-meta">
+                        <p><i class="fas fa-user"></i> 
+                            ${video.author ? 
+                                `<a href="${video.author.url}" target="_blank">${video.author.name}</a>` : 
+                                'Unknown author'}
+                        </p>
+                        <p><i class="fas fa-eye"></i> ${(video.views?.toLocaleString() || 'N/A')} views</p>
+                        <p><i class="fas fa-clock"></i> ${video.duration?.timestamp || '00:00'}</p>
                     </div>
-                `).join('');
+                    <button class="download-button" onclick="handleDownloadClick(this, '${video.url}')">
+                        <i class="fas fa-download"></i>
+                        Download
+                    </button>
+                    <div class="download-section" id="download-${video.url}"></div>
+                </div>
+            </div>
+        `).join('');
 
-            } catch(error) {
-                resultsContainer.innerHTML = `<p class="error">Error loading videos</p>`;
-            } finally {
-                toggleLoader(false);
-            }
+    } catch(error) {
+        console.error("Error fetching videos:", error);
+        const resultsContainer = document.getElementById("results");
+        if (resultsContainer) {
+            resultsContainer.innerHTML = `<p class="error">Error loading videos. Please try again.</p>`;
         }
+    } finally {
+        toggleLoader(false);
+    }
+}
 
-       async function fetchDownloadLinks(button, videoUrl) {
+async function fetchDownloadLinks(button, videoUrl) {
+    if (!button) return;
+
     const originalContent = button.innerHTML;
     button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
     button.disabled = true;
 
     const downloadSection = document.getElementById(`download-${videoUrl}`);
+    if (!downloadSection) {
+        button.innerHTML = originalContent;
+        button.disabled = false;
+        return;
+    }
+
     downloadSection.innerHTML = '';
 
     try {
         const apiUrl = `https://ab-ytdlprov2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
         const response = await fetch(apiUrl);
+        
+        if (!response.ok) throw new Error('Network response was not ok');
+        
         const data = await response.json();
 
-     
         if (data.audio && data.audio.length > 0) {
             data.audio.forEach(audio => {
                 const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(audio.download)}`;
@@ -103,7 +196,6 @@
             });
         }
 
-        
         if (data.video && data.video.length > 0) {
             data.video.forEach(video => {
                 const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(video.download)}`;
@@ -116,16 +208,18 @@
             });
         }
 
+        if (downloadSection.children.length === 0) {
+            downloadSection.innerHTML = `<p class="error">No download options available</p>`;
+        }
+
     } catch (error) {
-        downloadSection.innerHTML = `<p class="error">Error loading download options</p>`;
+        console.error("Error fetching download links:", error);
+        if (downloadSection) {
+            downloadSection.innerHTML = `<p class="error">Error loading download options</p>`;
+        }
     } finally {
         button.innerHTML = originalContent;
         button.disabled = false;
     }
 }
-
- document.querySelector('.modal-button.join').addEventListener('click', function(e) {
-            e.preventDefault();
-            joinChannel();
-            window.open(this.href, '_blank');
-        });
+document.addEventListener('DOMContentLoaded', initModal);

@@ -201,9 +201,9 @@ async function fetchDownloadLinks(button, videoUrl, server) {
 
             if (data.audio && data.audio.length > 0) {
                 data.audio.forEach(audio => {
-                    const proxied = `https://ab-ytdlprov2.abrahamdw882.workers.dev/?file=${encodeURIComponent(audio.download)}`;
+                    const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(audio.download)}`;
                     downloadSection.innerHTML += `
-                        <a href="${proxied}" class="download-button" download="abztech-downloader.mp3">
+                        <a href="${proxied}" class="download-button" download>
                             <i class="fas fa-music"></i>
                             MP3 Audio (${audio.quality}kbps)
                         </a>
@@ -213,9 +213,9 @@ async function fetchDownloadLinks(button, videoUrl, server) {
 
             if (data.video && data.video.length > 0) {
                 data.video.forEach(video => {
-                    const proxied = `https://ab-ytdlprov2.abrahamdw882.workers.dev/?file=${encodeURIComponent(video.download)}`;
+                    const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(video.download)}`;
                     downloadSection.innerHTML += `
-                        <a href="${proxied}" class="download-button" download="abztech-downloader.mp4">
+                        <a href="${proxied}" class="download-button" download>
                             <i class="fas fa-video"></i>
                             MP4 Video (${video.quality}p)
                         </a>
@@ -223,6 +223,7 @@ async function fetchDownloadLinks(button, videoUrl, server) {
                 });
             }
         } else if (server === 2) {
+            
             apiUrl = `https://ab-ytdlvid.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
             const response = await fetch(apiUrl);
             

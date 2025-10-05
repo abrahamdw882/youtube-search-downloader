@@ -201,8 +201,9 @@ async function fetchDownloadLinks(button, videoUrl, server) {
 
             if (data.audio && data.audio.length > 0) {
                 data.audio.forEach(audio => {
+                    const proxied = `https://ab-ytdlprov2.abrahamdw882.workers.dev/?file=${encodeURIComponent(audio.download)}`;
                     downloadSection.innerHTML += `
-                        <a href="${audio.download}" class="download-button" download>
+                        <a href="${proxied}" class="download-button" download="abztech-downloader.mp3">
                             <i class="fas fa-music"></i>
                             MP3 Audio (${audio.quality}kbps)
                         </a>
@@ -212,8 +213,9 @@ async function fetchDownloadLinks(button, videoUrl, server) {
 
             if (data.video && data.video.length > 0) {
                 data.video.forEach(video => {
+                    const proxied = `https://ab-ytdlprov2.abrahamdw882.workers.dev/?file=${encodeURIComponent(video.download)}`;
                     downloadSection.innerHTML += `
-                        <a href="${video.download}" class="download-button" download>
+                        <a href="${proxied}" class="download-button" download="abztech-downloader.mp4">
                             <i class="fas fa-video"></i>
                             MP4 Video (${video.quality}p)
                         </a>
@@ -231,8 +233,9 @@ async function fetchDownloadLinks(button, videoUrl, server) {
             if (data.downloadUrls) {
                 Object.keys(data.downloadUrls).forEach(quality => {
                     if (quality.includes('p')) {
+                        const proxied = `https://ab-ytdlvid.abrahamdw882.workers.dev/?file=${encodeURIComponent(data.downloadUrls[quality])}`;
                         downloadSection.innerHTML += `
-                            <a href="${data.downloadUrls[quality]}" class="download-button" download>
+                            <a href="${proxied}" class="download-button" download="abztech-downloader.mp4">
                                 <i class="fas fa-video"></i>
                                 MP4 Video (${quality})
                             </a>
@@ -242,8 +245,9 @@ async function fetchDownloadLinks(button, videoUrl, server) {
 
                 Object.keys(data.downloadUrls).forEach(quality => {
                     if (quality.includes('k')) {
+                        const proxied = `https://ab-ytdlvid.abrahamdw882.workers.dev/?file=${encodeURIComponent(data.downloadUrls[quality])}`;
                         downloadSection.innerHTML += `
-                            <a href="${data.downloadUrls[quality]}" class="download-button" download>
+                            <a href="${proxied}" class="download-button" download="abztech-downloader.mp3">
                                 <i class="fas fa-music"></i>
                                 MP3 Audio (${quality})
                             </a>

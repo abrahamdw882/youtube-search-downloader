@@ -1,16 +1,19 @@
- let rotation = 0;
+let rotation = 0;
 let animationFrame;
 let hasJoinedChannel = localStorage.getItem('hasJoinedChannel') === 'true';
 let pendingDownload = null;
+
 function initModal() {
     const whatsappModal = document.getElementById('whatsappModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const closeModal = document.getElementById('closeModal');
+    
     if (!hasJoinedChannel) {
         setTimeout(() => {
             if (whatsappModal) whatsappModal.classList.add('active');
         }, 3000);
     }
+    
     if (closeModalBtn) {
         closeModalBtn.addEventListener('click', () => {
             if (whatsappModal) whatsappModal.classList.remove('active');
@@ -22,6 +25,7 @@ function initModal() {
             if (whatsappModal) whatsappModal.classList.remove('active');
         });
     }
+    
     if (whatsappModal) {
         whatsappModal.addEventListener('click', (e) => {
             if (e.target === whatsappModal) {
@@ -29,6 +33,7 @@ function initModal() {
             }
         });
     }
+    
     const joinButton = document.querySelector('.modal-button.join');
     if (joinButton) {
         joinButton.addEventListener('click', function(e) {
@@ -38,21 +43,22 @@ function initModal() {
         });
     }
 }
+
 function joinChannel() {
     localStorage.setItem('hasJoinedChannel', 'true');
     hasJoinedChannel = true;
     const whatsappModal = document.getElementById('whatsappModal');
     if (whatsappModal) whatsappModal.classList.remove('active');
     if (pendingDownload) {
-        const { button, videoUrl } = pendingDownload;
-        fetchDownloadLinks(button, videoUrl);
+        const { button, videoUrl, server } = pendingDownload;
+        fetchDownloadLinks(button, videoUrl, server);
         pendingDownload = null;
     }
 }
 
-function handleDownloadClick(button, videoUrl) {
+function handleDownloadClick(button, videoUrl, server) {
     if (!hasJoinedChannel) {
-        pendingDownload = { button, videoUrl };
+        pendingDownload = { button, videoUrl, server };
         const whatsappModal = document.getElementById('whatsappModal');
         if (whatsappModal) whatsappModal.classList.add('active');
         button.disabled = true;
@@ -60,11 +66,11 @@ function handleDownloadClick(button, videoUrl) {
         setTimeout(() => {
             if (!hasJoinedChannel && button) {
                 button.disabled = false;
-                button.innerHTML = `<i class="fas fa-download"></i> Download`;
+                button.innerHTML = `<i class="fas fa-download"></i> Server ${server}`;
             }
         }, 3000);
     } else {
-        fetchDownloadLinks(button, videoUrl);
+        fetchDownloadLinks(button, videoUrl, server);
     }
 }
 
@@ -140,10 +146,16 @@ async function fetchVideos() {
                         <p><i class="fas fa-eye"></i> ${(video.views?.toLocaleString() || 'N/A')} views</p>
                         <p><i class="fas fa-clock"></i> ${video.duration?.timestamp || '00:00'}</p>
                     </div>
-                    <button class="download-button" onclick="handleDownloadClick(this, '${video.url}')">
-                        <i class="fas fa-download"></i>
-                        Download
-                    </button>
+                    <div class="server-buttons">
+                        <button class="download-button server-1" onclick="handleDownloadClick(this, '${video.url}', 1)">
+                            <i class="fas fa-download"></i>
+                            Server 1
+                        </button>
+                        <button class="download-button server-2" onclick="handleDownloadClick(this, '${video.url}', 2)">
+                            <i class="fas fa-download"></i>
+                            Server 2
+                        </button>
+                    </div>
                     <div class="download-section" id="download-${video.url}"></div>
                 </div>
             </div>
@@ -160,7 +172,7 @@ async function fetchVideos() {
     }
 }
 
-async function fetchDownloadLinks(button, videoUrl) {
+async function fetchDownloadLinks(button, videoUrl, server) {
     if (!button) return;
 
     const originalContent = button.innerHTML;
@@ -177,35 +189,72 @@ async function fetchDownloadLinks(button, videoUrl) {
     downloadSection.innerHTML = '';
 
     try {
-        const apiUrl = `https://ab-ytdlprov2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
-        const response = await fetch(apiUrl);
+        let apiUrl;
         
-        if (!response.ok) throw new Error('Network response was not ok');
-        
-        const data = await response.json();
+        if (server === 1) {
+            apiUrl = `https://ab-ytdlprov2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
+            const response = await fetch(apiUrl);
+            
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const data = await response.json();
 
-        if (data.audio && data.audio.length > 0) {
-            data.audio.forEach(audio => {
-                const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(audio.download)}`;
-                downloadSection.innerHTML += `
-                    <a href="${proxied}" class="download-button" download>
-                        <i class="fas fa-music"></i>
-                        MP3 Audio (${audio.quality}kbps)
-                    </a>
-                `;
-            });
-        }
+            if (data.audio && data.audio.length > 0) {
+                data.audio.forEach(audio => {
+                    const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(audio.download)}`;
+                    downloadSection.innerHTML += `
+                        <a href="${proxied}" class="download-button" download>
+                            <i class="fas fa-music"></i>
+                            MP3 Audio (${audio.quality}kbps)
+                        </a>
+                    `;
+                });
+            }
 
-        if (data.video && data.video.length > 0) {
-            data.video.forEach(video => {
-                const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(video.download)}`;
-                downloadSection.innerHTML += `
-                    <a href="${proxied}" class="download-button" download>
-                        <i class="fas fa-video"></i>
-                        MP4 Video (${video.quality}p)
-                    </a>
-                `;
-            });
+            if (data.video && data.video.length > 0) {
+                data.video.forEach(video => {
+                    const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(video.download)}`;
+                    downloadSection.innerHTML += `
+                        <a href="${proxied}" class="download-button" download>
+                            <i class="fas fa-video"></i>
+                            MP4 Video (${video.quality}p)
+                        </a>
+                    `;
+                });
+            }
+        } else if (server === 2) {
+            apiUrl = `https://ab-ytdlvid.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
+            const response = await fetch(apiUrl);
+            
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const data = await response.json();
+
+            if (data.downloadUrls) {
+                Object.keys(data.downloadUrls).forEach(quality => {
+                    if (quality.includes('p')) {
+                        const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(data.downloadUrls[quality])}`;
+                        downloadSection.innerHTML += `
+                            <a href="${proxied}" class="download-button" download>
+                                <i class="fas fa-video"></i>
+                                MP4 Video (${quality})
+                            </a>
+                        `;
+                    }
+                });
+
+                Object.keys(data.downloadUrls).forEach(quality => {
+                    if (quality.includes('k')) {
+                        const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(data.downloadUrls[quality])}`;
+                        downloadSection.innerHTML += `
+                            <a href="${proxied}" class="download-button" download>
+                                <i class="fas fa-music"></i>
+                                MP3 Audio (${quality})
+                            </a>
+                        `;
+                    }
+                });
+            }
         }
 
         if (downloadSection.children.length === 0) {
@@ -222,4 +271,5 @@ async function fetchDownloadLinks(button, videoUrl) {
         button.disabled = false;
     }
 }
+
 document.addEventListener('DOMContentLoaded', initModal);

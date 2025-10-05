@@ -166,11 +166,11 @@
         }
 
         .download-button.server-1 {
-            background: linear-gradient(45deg, #2196f3, #2729b0);
+            background:linear-gradient(45deg, #404040, #000000);
         }
 
         .download-button.server-2 {
-            background: linear-gradient(45deg, #ff5722, #e64a19);
+            background:linear-gradient(45deg, #404040, #000000);
         }
 
         .download-button:disabled {

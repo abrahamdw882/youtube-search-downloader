@@ -322,6 +322,7 @@
             margin-bottom: 2rem;
             font-size: 2rem;
             background: linear-gradient(45deg, #fff, #2196f3);
+             -webkit-background-clip: text;
         }
 
         .steps-container {

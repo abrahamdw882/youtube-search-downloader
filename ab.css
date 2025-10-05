@@ -161,6 +161,16 @@
             overflow: hidden;
             min-width: 140px;
             justify-content: center;
+            border: none;
+            cursor: pointer;
+        }
+
+        .download-button.server-1 {
+            background: linear-gradient(45deg, #2196f3, #2729b0);
+        }
+
+        .download-button.server-2 {
+            background: linear-gradient(45deg, #ff5722, #e64a19);
         }
 
         .download-button:disabled {
@@ -210,8 +220,17 @@
             to { transform: rotate(360deg); }
         }
 
+        .server-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
         @media (max-width: 480px) { 
             .download-button{ font-size: 13px;}
+            .server-buttons {
+                flex-direction: column;
+            }
         }
 
         @media (max-width: 768px) {
@@ -565,10 +584,6 @@
                 font-size: 0.9rem;
             }
             
-         
-            
- 
-            
             .modal-icon {
                 font-size: 2rem;
                 margin-bottom: 0.75rem;
@@ -579,11 +594,9 @@
                 padding: 1.25rem 1rem;
             }
             
-              
-
-.modal-button {
-    font-size: 13px;
-}
+            .modal-button {
+                font-size: 13px;
+            }
             .modal-title {
                 font-size: 1.2rem;
             }

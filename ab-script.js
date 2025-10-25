@@ -190,13 +190,11 @@ async function fetchDownloadLinks(button, videoUrl, server) {
 
     try {
         let apiUrl;
-        
+
         if (server === 1) {
             apiUrl = `https://ab-ytdlprov2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
             const response = await fetch(apiUrl);
-            
             if (!response.ok) throw new Error('Network response was not ok');
-            
             const data = await response.json();
 
             if (data.audio && data.audio.length > 0) {
@@ -204,10 +202,8 @@ async function fetchDownloadLinks(button, videoUrl, server) {
                     const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(audio.download)}`;
                     downloadSection.innerHTML += `
                         <a href="${proxied}" class="download-button" download>
-                            <i class="fas fa-music"></i>
-                            MP3 Audio (${audio.quality}kbps)
-                        </a>
-                    `;
+                            <i class="fas fa-music"></i> MP3 Audio (${audio.quality}kbps)
+                        </a>`;
                 });
             }
 
@@ -216,45 +212,31 @@ async function fetchDownloadLinks(button, videoUrl, server) {
                     const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(video.download)}`;
                     downloadSection.innerHTML += `
                         <a href="${proxied}" class="download-button" download>
-                            <i class="fas fa-video"></i>
-                            MP4 Video (${video.quality}p)
-                        </a>
-                    `;
+                            <i class="fas fa-video"></i> MP4 Video (${video.quality}p)
+                        </a>`;
                 });
             }
+
         } else if (server === 2) {
-            
-            apiUrl = `https://ab-ytdlvid.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
+            apiUrl = `https://api-rebix.zone.id/api/ytvi?url=${encodeURIComponent(videoUrl)}`;
             const response = await fetch(apiUrl);
-            
             if (!response.ok) throw new Error('Network response was not ok');
             
             const data = await response.json();
-
-            if (data.downloadUrls) {
-                Object.keys(data.downloadUrls).forEach(quality => {
-                    if (quality.includes('p')) {
-                        const proxied = `https://ab-ytdlvid.abrahamdw882.workers.dev/?file=${encodeURIComponent(data.downloadUrls[quality])}`;
-                        downloadSection.innerHTML += `
-                            <a href="${proxied}" class="download-button" download="abztech-downloader.mp4">
-                                <i class="fas fa-video"></i>
-                                MP4 Video (${quality})
-                            </a>
-                        `;
-                    }
+            
+            if (data && data.status && data.results && Array.isArray(data.results)) {
+                data.results.forEach(item => {
+                    const quality = item.quality || "Unknown";
+                    const downloadUrl = item.downloadUrl;
+                    const fileName = item.result?.filename || `video_${quality}.mp4`;
+                    
+                    downloadSection.innerHTML += `
+                        <a href="${downloadUrl}" class="download-button" download="${fileName}">
+                            <i class="fas fa-video"></i> MP4 Video (${quality})
+                        </a>`;
                 });
-
-                Object.keys(data.downloadUrls).forEach(quality => {
-                    if (quality.includes('k')) {
-                        const proxied = `https://ab-ytdlvid.abrahamdw882.workers.dev/?file=${encodeURIComponent(data.downloadUrls[quality])}`;
-                        downloadSection.innerHTML += `
-                            <a href="${proxied}" class="download-button" download="abztech-downloader.mp3">
-                                <i class="fas fa-music"></i>
-                                MP3 Audio (${quality})
-                            </a>
-                        `;
-                    }
-                });
+            } else {
+                downloadSection.innerHTML = `<p class="error">No available formats</p>`;
             }
         }
 

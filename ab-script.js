@@ -218,23 +218,33 @@ async function fetchDownloadLinks(button, videoUrl, server) {
             }
 
         } else if (server === 2) {
-            apiUrl = `https://api-rebix.zone.id/api/ytvi?url=${encodeURIComponent(videoUrl)}`;
+            apiUrl = `https://youtubeabdlpro.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error('Network response was not ok');
-            
             const data = await response.json();
             
-            if (data && data.status && data.results && Array.isArray(data.results)) {
-                data.results.forEach(item => {
-                    const quality = item.quality || "Unknown";
-                    const downloadUrl = item.downloadUrl;
-                    const fileName = item.result?.filename || `video_${quality}.mp4`;
-                    
-                    downloadSection.innerHTML += `
-                        <a href="${downloadUrl}" class="download-button" download="${fileName}">
-                            <i class="fas fa-video"></i> MP4 Video (${quality})
-                        </a>`;
-                });
+            if (data && data.status && data.results) {
+                const { video = {}, audio = {} } = data.results;
+
+                for (const bitrate in audio) {
+                    const a = audio[bitrate];
+                    if (a && a.url) {
+                        downloadSection.innerHTML += `
+                            <a href="${a.url}" class="download-button" download>
+                                <i class="fas fa-music"></i> Audio ${bitrate}
+                            </a>`;
+                    }
+                }
+
+                for (const quality in video) {
+                    const v = video[quality];
+                    if (v && v.url) {
+                        downloadSection.innerHTML += `
+                            <a href="${v.url}" class="download-button" download>
+                                <i class="fas fa-video"></i> Video ${quality}
+                            </a>`;
+                    }
+                }
             } else {
                 downloadSection.innerHTML = `<p class="error">No available formats</p>`;
             }
@@ -254,5 +264,4 @@ async function fetchDownloadLinks(button, videoUrl, server) {
         button.disabled = false;
     }
 }
-
 document.addEventListener('DOMContentLoaded', initModal);

@@ -125,9 +125,7 @@ async function fetchVideos() {
 
         const apiUrl = `https://ab-yts.abrahamdw882.workers.dev?query=${encodeURIComponent(query)}`;
         const response = await fetch(apiUrl);
-        
         if (!response.ok) throw new Error('Network response was not ok');
-        
         const data = await response.json();
 
         resultsContainer.innerHTML = data.map(video => `
@@ -162,59 +160,47 @@ async function fetchVideos() {
         `).join('');
 
     } catch(error) {
-        console.error("Error fetching videos:", error);
-        const resultsContainer = document.getElementById("results");
-        if (resultsContainer) {
-            resultsContainer.innerHTML = `<p class="error">Error loading videos. Please try again.</p>`;
-        }
+        resultsContainer.innerHTML = `<p class="error">Error loading videos. Please try again.</p>`;
     } finally {
         toggleLoader(false);
     }
 }
 
 async function fetchDownloadLinks(button, videoUrl, server) {
-    if (!button) return;
-
     const originalContent = button.innerHTML;
     button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
     button.disabled = true;
 
     const downloadSection = document.getElementById(`download-${videoUrl}`);
-    if (!downloadSection) {
-        button.innerHTML = originalContent;
-        button.disabled = false;
-        return;
-    }
-
     downloadSection.innerHTML = '';
 
     try {
         let apiUrl;
 
         if (server === 1) {
-            apiUrl = `https://ab-ytdlprov2.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
+            apiUrl = `https://api-abztech.zone.id/download/ytdl?url=${encodeURIComponent(videoUrl)}`;
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
 
-            if (data.audio && data.audio.length > 0) {
-                data.audio.forEach(audio => {
-                    const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(audio.download)}`;
+            if (data.status) {
+                if (data.audio && data.audio.url) {
                     downloadSection.innerHTML += `
-                        <a href="${proxied}" class="download-button" download>
-                            <i class="fas fa-music"></i> MP3 Audio (${audio.quality}kbps)
+                        <a href="${data.audio.url}" class="download-button" target="_blank">
+                            <i class="fas fa-music"></i> MP3 Audio
                         </a>`;
-                });
-            }
+                }
 
-            if (data.video && data.video.length > 0) {
-                data.video.forEach(video => {
-                    const proxied = `https://ab-ytdlv3.abrahamdw882.workers.dev/?file=${encodeURIComponent(video.download)}`;
-                    downloadSection.innerHTML += `
-                        <a href="${proxied}" class="download-button" download>
-                            <i class="fas fa-video"></i> MP4 Video (${video.quality}p)
-                        </a>`;
-                });
+                if (data.video && data.video.length > 0) {
+                    data.video.forEach(v => {
+                        downloadSection.innerHTML += `
+                            <a href="${v.url}" class="download-button" target="_blank">
+                                <i class="fas fa-video"></i> MP4 ${v.quality}
+                            </a>`;
+                    });
+                }
+            } else {
+                downloadSection.innerHTML = `<p class="error">No available formats</p>`;
             }
 
         } else if (server === 2) {
@@ -255,13 +241,11 @@ async function fetchDownloadLinks(button, videoUrl, server) {
         }
 
     } catch (error) {
-        console.error("Error fetching download links:", error);
-        if (downloadSection) {
-            downloadSection.innerHTML = `<p class="error">Error loading download options</p>`;
-        }
+        downloadSection.innerHTML = `<p class="error">Error loading download options</p>`;
     } finally {
         button.innerHTML = originalContent;
         button.disabled = false;
     }
 }
+
 document.addEventListener('DOMContentLoaded', initModal);

@@ -7,13 +7,13 @@ function initModal() {
     const whatsappModal = document.getElementById('whatsappModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const closeModal = document.getElementById('closeModal');
-    
+
     if (!hasJoinedChannel) {
         setTimeout(() => {
             if (whatsappModal) whatsappModal.classList.add('active');
         }, 3000);
     }
-    
+
     if (closeModalBtn) {
         closeModalBtn.addEventListener('click', () => {
             if (whatsappModal) whatsappModal.classList.remove('active');
@@ -25,7 +25,7 @@ function initModal() {
             if (whatsappModal) whatsappModal.classList.remove('active');
         });
     }
-    
+
     if (whatsappModal) {
         whatsappModal.addEventListener('click', (e) => {
             if (e.target === whatsappModal) {
@@ -33,7 +33,7 @@ function initModal() {
             }
         });
     }
-    
+
     const joinButton = document.querySelector('.modal-button.join');
     if (joinButton) {
         joinButton.addEventListener('click', function(e) {
@@ -136,9 +136,9 @@ async function fetchVideos() {
                         <a href="${video.url}" target="_blank">${video.title}</a>
                     </h3>
                     <div class="video-meta">
-                        <p><i class="fas fa-user"></i> 
-                            ${video.author ? 
-                                `<a href="${video.author.url}" target="_blank">${video.author.name}</a>` : 
+                        <p><i class="fas fa-user"></i>
+                            ${video.author ?
+                                `<a href="${video.author.url}" target="_blank">${video.author.name}</a>` :
                                 'Unknown author'}
                         </p>
                         <p><i class="fas fa-eye"></i> ${(video.views?.toLocaleString() || 'N/A')} views</p>
@@ -178,25 +178,29 @@ async function fetchDownloadLinks(button, videoUrl, server) {
         let apiUrl;
 
         if (server === 1) {
-            apiUrl = `https://api-abztech.zone.id/download/ytdl?url=${encodeURIComponent(videoUrl)}`;
+            apiUrl = `https://api-rebix.zone.id/api/ytvi?url=${encodeURIComponent(videoUrl)}`;
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
 
             if (data.status) {
-                if (data.audio && data.audio.url) {
+                // Audio
+                if (data.audResults && data.audResults.status && data.audResults.downloadUrl) {
                     downloadSection.innerHTML += `
-                        <a href="${data.audio.url}" class="download-button" target="_blank">
+                        <a href="${data.audResults.downloadUrl}" class="download-button" target="_blank">
                             <i class="fas fa-music"></i> MP3 Audio
                         </a>`;
                 }
 
-                if (data.video && data.video.length > 0) {
-                    data.video.forEach(v => {
-                        downloadSection.innerHTML += `
-                            <a href="${v.url}" class="download-button" target="_blank">
-                                <i class="fas fa-video"></i> MP4 ${v.quality}
-                            </a>`;
+                // Video qualities
+                if (data.results && data.results.length > 0) {
+                    data.results.forEach(v => {
+                        if (v.status && v.downloadUrl) {
+                            downloadSection.innerHTML += `
+                                <a href="${v.downloadUrl}" class="download-button" target="_blank">
+                                    <i class="fas fa-video"></i> MP4 ${v.quality} (${v.size})
+                                </a>`;
+                        }
                     });
                 }
             } else {
@@ -208,7 +212,7 @@ async function fetchDownloadLinks(button, videoUrl, server) {
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
-            
+
             if (data && data.status && data.results) {
                 const { video = {}, audio = {} } = data.results;
 

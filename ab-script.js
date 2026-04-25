@@ -177,33 +177,26 @@ async function fetchDownloadLinks(button, videoUrl, server) {
     try {
         let apiUrl;
 
-        if (server === 1) {
-            apiUrl = `https://api-abztech.zone.id/download/ytdl?url=${encodeURIComponent(videoUrl)}`;
-            const response = await fetch(apiUrl);
-            if (!response.ok) throw new Error('Network response was not ok');
-            const data = await response.json();
+      if (server === 1) {
+    apiUrl = `https://api-abztech.zone.id/download/ytdl4?url=${encodeURIComponent(videoUrl)}`;
+    
+    const response = await fetch(apiUrl);
+    if (!response.ok) throw new Error('Network response was not ok');
+    
+    const data = await response.json();
 
-            if (data.status) {
-                if (data.audio && data.audio.url) {
-                    downloadSection.innerHTML += `
-                        <a href="${data.audio.url}" class="download-button" target="_blank">
-                            <i class="fas fa-music"></i> MP3 Audio
-                        </a>`;
-                }
+    if (data.status && data.downloadUrl) {
+        downloadSection.innerHTML = `
+            <a href="${data.downloadUrl}" class="download-button" target="_blank" download>
+                <i class="fas fa-video"></i> MP4 ${data.finalQuality || 'HD'}
+            </a>
+        `;
+    } else {
+        downloadSection.innerHTML = `<p class="error">No available formats</p>`;
+    }
+}
 
-                if (data.video && data.video.length > 0) {
-                    data.video.forEach(v => {
-                        downloadSection.innerHTML += `
-                            <a href="${v.url}" class="download-button" target="_blank">
-                                <i class="fas fa-video"></i> MP4 ${v.quality}
-                            </a>`;
-                    });
-                }
-            } else {
-                downloadSection.innerHTML = `<p class="error">No available formats</p>`;
-            }
-
-        } else if (server === 2) {
+         else if (server === 2) {
             apiUrl = `https://youtubeabdlpro.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error('Network response was not ok');

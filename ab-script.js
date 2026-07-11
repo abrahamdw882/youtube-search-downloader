@@ -169,11 +169,13 @@ async function fetchVideos() {
     let query = searchQuery.value.trim();
     if (!query) return;
 
-    const extractedId = extractVideoId(query);
+    // Try to extract video ID first
+    const videoId = extractVideoId(query);
     
-    if (extractedId) {
-        query = buildWatchUrl(extractedId);
+    if (videoId) {
+        query = buildWatchUrl(videoId);
     } else {
+        // Fallback regex replacements
         query = query
             .replace(/https?:\/\/youtu\.be\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$1")
             .replace(/https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$2");
@@ -221,6 +223,7 @@ async function fetchVideos() {
 
     } catch(error) {
         resultsContainer.innerHTML = `<p class="error">Error loading videos. Please try again.</p>`;
+        console.error('Fetch error:', error);
     } finally {
         toggleLoader(false);
     }
@@ -293,6 +296,7 @@ async function fetchDownloadLinks(button, videoUrl, server) {
 
     } catch (error) {
         downloadSection.innerHTML = `<p class="error">Error loading download options</p>`;
+        console.error('Download error:', error);
     } finally {
         button.innerHTML = originalContent;
         button.disabled = false;

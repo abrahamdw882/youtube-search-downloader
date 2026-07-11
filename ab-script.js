@@ -3,60 +3,6 @@ let animationFrame;
 let hasJoinedChannel = localStorage.getItem('hasJoinedChannel') === 'true';
 let pendingDownload = null;
 
-function normaliseInput(raw) {
-    return (raw || "").trim();
-}
-
-function extractVideoId(raw) {
-    const input = normaliseInput(raw);
-    if (!input) return null;
-
-    const bareIdPattern = /^[A-Za-z0-9_-]{8,15}$/;
-    if (!input.includes("http") && bareIdPattern.test(input)) {
-        return input;
-    }
-
-    let url;
-    try {
-        url = new URL(input);
-    } catch {
-        try {
-            url = new URL("https://" + input);
-        } catch {
-            return null;
-        }
-    }
-
-    const host = url.hostname.replace(/^www\./i, "").toLowerCase();
-    const pathname = url.pathname;
-    const parts = pathname.split("/").filter(Boolean);
-
-    if (host === "youtu.be") {
-        return parts[0] || null;
-    }
-
-    if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com") {
-        if (pathname.startsWith("/watch")) {
-            return url.searchParams.get("v");
-        }
-        if (parts[0] === "shorts" && parts[1]) {
-            return parts[1];
-        }
-        if (parts[0] === "embed" && parts[1]) {
-            return parts[1];
-        }
-    }
-
-    const fallbackId = url.searchParams.get("v");
-    if (fallbackId) return fallbackId;
-
-    return null;
-}
-
-function buildWatchUrl(videoId) {
-    return `https://www.youtube.com/watch?v=${videoId}`;
-}
-
 function initModal() {
     const whatsappModal = document.getElementById('whatsappModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
@@ -169,11 +115,9 @@ async function fetchVideos() {
     let query = searchQuery.value.trim();
     if (!query) return;
 
-    const videoId = extractVideoId(query);
-    
-    if (videoId) {
-        query = buildWatchUrl(videoId);
-    }
+    query = query
+        .replace(/https?:\/\/youtu\.be\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$1")
+        .replace(/https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$2");
 
     try {
         resultsContainer.innerHTML = '';
@@ -184,44 +128,39 @@ async function fetchVideos() {
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
 
-        if (data && data.length > 0) {
-            resultsContainer.innerHTML = data.map(video => `
-                <div class="video-card">
-                    <img src="${video.thumbnail}" class="thumbnail" alt="${video.title}">
-                    <div class="video-content">
-                        <h3 class="video-title">
-                            <a href="${video.url}" target="_blank">${video.title}</a>
-                        </h3>
-                        <div class="video-meta">
-                            <p><i class="fas fa-user"></i> 
-                                ${video.author ? 
-                                    `<a href="${video.author.url}" target="_blank">${video.author.name}</a>` : 
-                                    'Unknown author'}
-                            </p>
-                            <p><i class="fas fa-eye"></i> ${(video.views?.toLocaleString() || 'N/A')} views</p>
-                            <p><i class="fas fa-clock"></i> ${video.duration?.timestamp || '00:00'}</p>
-                        </div>
-                        <div class="server-buttons">
-                            <button class="download-button server-1" onclick="handleDownloadClick(this, '${video.url}', 1)">
-                                <i class="fas fa-download"></i>
-                                Server 1
-                            </button>
-                            <button class="download-button server-2" onclick="handleDownloadClick(this, '${video.url}', 2)">
-                                <i class="fas fa-download"></i>
-                                Server 2
-                            </button>
-                        </div>
-                        <div class="download-section" id="download-${video.url}"></div>
+        resultsContainer.innerHTML = data.map(video => `
+            <div class="video-card">
+                <img src="${video.thumbnail}" class="thumbnail" alt="${video.title}">
+                <div class="video-content">
+                    <h3 class="video-title">
+                        <a href="${video.url}" target="_blank">${video.title}</a>
+                    </h3>
+                    <div class="video-meta">
+                        <p><i class="fas fa-user"></i> 
+                            ${video.author ? 
+                                `<a href="${video.author.url}" target="_blank">${video.author.name}</a>` : 
+                                'Unknown author'}
+                        </p>
+                        <p><i class="fas fa-eye"></i> ${(video.views?.toLocaleString() || 'N/A')} views</p>
+                        <p><i class="fas fa-clock"></i> ${video.duration?.timestamp || '00:00'}</p>
                     </div>
+                    <div class="server-buttons">
+                        <button class="download-button server-1" onclick="handleDownloadClick(this, '${video.url}', 1)">
+                            <i class="fas fa-download"></i>
+                            Server 1
+                        </button>
+                        <button class="download-button server-2" onclick="handleDownloadClick(this, '${video.url}', 2)">
+                            <i class="fas fa-download"></i>
+                            Server 2
+                        </button>
+                    </div>
+                    <div class="download-section" id="download-${video.url}"></div>
                 </div>
-            `).join('');
-        } else {
-            resultsContainer.innerHTML = `<p class="error">No videos found. Please try a different search.</p>`;
-        }
+            </div>
+        `).join('');
 
     } catch(error) {
         resultsContainer.innerHTML = `<p class="error">Error loading videos. Please try again.</p>`;
-        console.error('Fetch error:', error);
     } finally {
         toggleLoader(false);
     }
@@ -238,24 +177,26 @@ async function fetchDownloadLinks(button, videoUrl, server) {
     try {
         let apiUrl;
 
-        if (server === 1) {
-            apiUrl = `https://api-abztech.zone.id/download/ytdl4?url=${encodeURIComponent(videoUrl)}`;
-            
-            const response = await fetch(apiUrl);
-            if (!response.ok) throw new Error('Network response was not ok');
-            
-            const data = await response.json();
+      if (server === 1) {
+    apiUrl = `https://api-abztech.zone.id/download/ytdl4?url=${encodeURIComponent(videoUrl)}`;
+    
+    const response = await fetch(apiUrl);
+    if (!response.ok) throw new Error('Network response was not ok');
+    
+    const data = await response.json();
 
-            if (data.status && data.downloadUrl) {
-                downloadSection.innerHTML = `
-                    <a href="${data.downloadUrl}" class="download-button" target="_blank" download>
-                        <i class="fas fa-video"></i> MP4 ${data.finalQuality || 'HD'}
-                    </a>
-                `;
-            } else {
-                downloadSection.innerHTML = `<p class="error">No available formats</p>`;
-            }
-        } else if (server === 2) {
+    if (data.status && data.downloadUrl) {
+        downloadSection.innerHTML = `
+            <a href="${data.downloadUrl}" class="download-button" target="_blank" download>
+                <i class="fas fa-video"></i> MP4 ${data.finalQuality || 'HD'}
+            </a>
+        `;
+    } else {
+        downloadSection.innerHTML = `<p class="error">No available formats</p>`;
+    }
+}
+
+         else if (server === 2) {
             apiUrl = `https://youtubeabdlpro.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error('Network response was not ok');
@@ -294,7 +235,6 @@ async function fetchDownloadLinks(button, videoUrl, server) {
 
     } catch (error) {
         downloadSection.innerHTML = `<p class="error">Error loading download options</p>`;
-        console.error('Download error:', error);
     } finally {
         button.innerHTML = originalContent;
         button.disabled = false;

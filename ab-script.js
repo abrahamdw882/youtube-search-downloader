@@ -3,6 +3,60 @@ let animationFrame;
 let hasJoinedChannel = localStorage.getItem('hasJoinedChannel') === 'true';
 let pendingDownload = null;
 
+function normaliseInput(raw) {
+    return (raw || "").trim();
+}
+
+function extractVideoId(raw) {
+    const input = normaliseInput(raw);
+    if (!input) return null;
+
+    const bareIdPattern = /^[A-Za-z0-9_-]{8,15}$/;
+    if (!input.includes("http") && bareIdPattern.test(input)) {
+        return input;
+    }
+
+    let url;
+    try {
+        url = new URL(input);
+    } catch {
+        try {
+            url = new URL("https://" + input);
+        } catch {
+            return null;
+        }
+    }
+
+    const host = url.hostname.replace(/^www\./i, "").toLowerCase();
+    const pathname = url.pathname;
+    const parts = pathname.split("/").filter(Boolean);
+
+    if (host === "youtu.be") {
+        return parts[0] || null;
+    }
+
+    if (host === "youtube.com" || host === "m.youtube.com" || host === "music.youtube.com") {
+        if (pathname.startsWith("/watch")) {
+            return url.searchParams.get("v");
+        }
+        if (parts[0] === "shorts" && parts[1]) {
+            return parts[1];
+        }
+        if (parts[0] === "embed" && parts[1]) {
+            return parts[1];
+        }
+    }
+
+    const fallbackId = url.searchParams.get("v");
+    if (fallbackId) return fallbackId;
+
+    return null;
+}
+
+function buildWatchUrl(videoId) {
+    return `https://www.youtube.com/watch?v=${videoId}`;
+}
+
 function initModal() {
     const whatsappModal = document.getElementById('whatsappModal');
     const closeModalBtn = document.getElementById('closeModalBtn');
@@ -115,9 +169,15 @@ async function fetchVideos() {
     let query = searchQuery.value.trim();
     if (!query) return;
 
-    query = query
-        .replace(/https?:\/\/youtu\.be\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$1")
-        .replace(/https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$2");
+    const extractedId = extractVideoId(query);
+    
+    if (extractedId) {
+        query = buildWatchUrl(extractedId);
+    } else {
+        query = query
+            .replace(/https?:\/\/youtu\.be\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$1")
+            .replace(/https?:\/\/(www\.)?youtube\.com\/shorts\/([a-zA-Z0-9_-]+)(\?.*)?/, "https://www.youtube.com/watch?v=$2");
+    }
 
     try {
         resultsContainer.innerHTML = '';
@@ -177,26 +237,24 @@ async function fetchDownloadLinks(button, videoUrl, server) {
     try {
         let apiUrl;
 
-      if (server === 1) {
-    apiUrl = `https://api-abztech.zone.id/download/ytdl4?url=${encodeURIComponent(videoUrl)}`;
-    
-    const response = await fetch(apiUrl);
-    if (!response.ok) throw new Error('Network response was not ok');
-    
-    const data = await response.json();
+        if (server === 1) {
+            apiUrl = `https://api-abztech.zone.id/download/ytdl4?url=${encodeURIComponent(videoUrl)}`;
+            
+            const response = await fetch(apiUrl);
+            if (!response.ok) throw new Error('Network response was not ok');
+            
+            const data = await response.json();
 
-    if (data.status && data.downloadUrl) {
-        downloadSection.innerHTML = `
-            <a href="${data.downloadUrl}" class="download-button" target="_blank" download>
-                <i class="fas fa-video"></i> MP4 ${data.finalQuality || 'HD'}
-            </a>
-        `;
-    } else {
-        downloadSection.innerHTML = `<p class="error">No available formats</p>`;
-    }
-}
-
-         else if (server === 2) {
+            if (data.status && data.downloadUrl) {
+                downloadSection.innerHTML = `
+                    <a href="${data.downloadUrl}" class="download-button" target="_blank" download>
+                        <i class="fas fa-video"></i> MP4 ${data.finalQuality || 'HD'}
+                    </a>
+                `;
+            } else {
+                downloadSection.innerHTML = `<p class="error">No available formats</p>`;
+            }
+        } else if (server === 2) {
             apiUrl = `https://youtubeabdlpro.abrahamdw882.workers.dev/?url=${encodeURIComponent(videoUrl)}`;
             const response = await fetch(apiUrl);
             if (!response.ok) throw new Error('Network response was not ok');
